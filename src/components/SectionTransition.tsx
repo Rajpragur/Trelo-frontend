@@ -22,17 +22,16 @@ export function SectionTransition({ type, position }: SectionTransitionProps) {
 
 export function SmoothTransition({
   from = "white",
-  to = "lavender",
+  to = "blue",
 }: {
-  from?: "white" | "lavender" | "blue";
-  to?: "white" | "lavender" | "blue";
+  from?: "white" | "blue";
+  to?: "white" | "blue";
 }) {
   if (from === to) return null;
 
   const colorMap = {
     white: "255, 255, 255",
-    lavender: "139, 92, 246",
-    blue: "59, 130, 246",
+    blue: "15, 91, 255",
   };
 
   const fromAlpha = from === "white" ? 0 : 0.06;

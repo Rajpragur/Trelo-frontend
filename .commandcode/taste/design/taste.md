@@ -11,4 +11,8 @@
 - Prefer visually dense, rich layouts with decorative background objects, props, and components rather than minimal/empty designs. Confidence: 0.65
 - Avoid uniform card grids where every card has identical visual treatment (same size, same structure). Vary card prominence — featured cards, compact cards, horizontal vs vertical — to avoid the AI-slop "6 identical cards" pattern. Confidence: 0.60
 - Always check and follow taste skills before implementing design changes. Do not override taste preferences with generic patterns. Confidence: 0.85
-- Always check and follow taste skills before implementing design changes. Do not override taste preferences with generic patterns. Confidence: 0.85
+- Prefer scroll-driven spread animations (useTransform with scrollYProgress) for card/feature reveals — cards should spread outward from center as user scrolls, not just appear statically. Confidence: 0.70
+- Feature cards should describe user pain points/problems first, not just list solution descriptions. Content should answer "what problem does this solve?" rather than "what does this feature do?" Confidence: 0.65
+- When animating card spreads, cards should originate from a single point (typically middle-bottom) and spread outward in a firework/rocket-like burst, then settle into their final grid positions. Use both X and Y translation with staggered timing. Confidence: 0.70
+- Use risablue (#0f5bff) as a primary brand accent color for transitions, highlights, and accent elements. Confidence: 0.65
+- Decorative/texture components (like FlickeringGrid, DitherShader) should be placed in the background layer of sections — behind the content with pointer-events-none — not integrated as visible foreground elements that displace or restructure the original layout. Confidence: 0.80
