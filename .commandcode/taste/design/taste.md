@@ -1,0 +1,14 @@
+# design
+- Use light theme instead of dark theme. Confidence: 0.80
+- Follow taste-skill design aesthetic for non-AI-looking, unique designs. Confidence: 0.65
+- Avoid generic "AI slop" design patterns — no gradient-heavy hero sections, no generic startup template look. Confidence: 0.75
+- Avoid YC/VC branding or references. Keep independent identity. Confidence: 0.70
+- Avoid orange as a primary accent color; use a more refined, independent palette. Confidence: 0.65
+- Take design inspiration primarily from Firecrawl (typography, layout, aesthetic). Confidence: 0.70
+- Ensure sections are tall enough that only one is visible in the viewport at a time, so scroll-triggered animations have meaningful reveal timing. Confidence: 0.70
+- Prefer branded dynamic backgrounds (symmetrical patterns, logo-shaped motifs, radial flow) over generic particle fields for section backgrounds. Confidence: 0.70
+- Avoid sharp section separators (border-t); sections should blend into each other smoothly with soft transitions. Confidence: 0.65
+- Prefer visually dense, rich layouts with decorative background objects, props, and components rather than minimal/empty designs. Confidence: 0.65
+- Avoid uniform card grids where every card has identical visual treatment (same size, same structure). Vary card prominence — featured cards, compact cards, horizontal vs vertical — to avoid the AI-slop "6 identical cards" pattern. Confidence: 0.60
+- Always check and follow taste skills before implementing design changes. Do not override taste preferences with generic patterns. Confidence: 0.85
+- Always check and follow taste skills before implementing design changes. Do not override taste preferences with generic patterns. Confidence: 0.85

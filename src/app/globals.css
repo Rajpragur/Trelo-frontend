@@ -1,26 +1,307 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* BDO Grotesk — used for logo, navbar, hero */
+@font-face {
+  font-family: 'BDO Grotesk';
+  src: url('/fonts/BDOGrotesk-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'BDO Grotesk';
+  src: url('/fonts/BDOGrotesk-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'BDO Grotesk';
+  src: url('/fonts/BDOGrotesk-DemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'BDO Grotesk';
+  src: url('/fonts/BDOGrotesk-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'BDO Grotesk';
+  src: url('/fonts/BDOGrotesk-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-trelo-accent: #3B82F6;
+  --color-trelo-secondary: #8B5CF6;
+  --color-trelo-bg: #ffffff;
+  --color-trelo-card: #ffffff;
+  --color-trelo-border: #e5e7eb;
+  --color-trelo-muted: #6b7280;
+  --color-trelo-text: #111827;
+  --font-bdo: 'BDO Grotesk', var(--font-geist-sans), sans-serif;
+  --color-trelo-green: #16a34a;
+  --color-trelo-red: #dc2626;
+  --color-trelo-amber: #d97706;
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-anonymous-pro);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #ffffff;
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.text-accent {
+  color: #0f5bff;
+}
+
+.dot-grid {
+  background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* ============================================
+   SECTION TRANSITION UTILITIES
+   ============================================ */
+
+.section-fade-to-lavender {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(139, 92, 246, 0.03) 40%,
+    rgba(139, 92, 246, 0.06) 100%
+  );
+}
+
+.section-fade-to-blue {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(59, 130, 246, 0.03) 40%,
+    rgba(59, 130, 246, 0.05) 100%
+  );
+}
+
+.section-fade-to-white {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    #ffffff 100%
+  );
+}
+
+.section-fade-from-lavender {
+  background: linear-gradient(
+    to bottom,
+    rgba(139, 92, 246, 0.06) 0%,
+    rgba(139, 92, 246, 0.02) 40%,
+    transparent 100%
+  );
+}
+
+.section-fade-from-blue {
+  background: linear-gradient(
+    to bottom,
+    rgba(59, 130, 246, 0.05) 0%,
+    rgba(59, 130, 246, 0.02) 40%,
+    transparent 100%
+  );
+}
+
+/* ============================================
+   GEOMETRIC ACCENT DECORATIONS
+   ============================================ */
+
+.geometric-accent {
+  position: absolute;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.geometric-accent::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border: 1px solid rgba(139, 92, 246, 0.08);
+  border-radius: 50%;
+}
+
+.geometric-accent::after {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border: 1px solid rgba(139, 92, 246, 0.05);
+  border-radius: 50%;
+}
+
+/* ============================================
+   ANIMATED GRADIENT BORDER
+   ============================================ */
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.animated-border {
+  position: relative;
+  border-radius: 0.375rem;
+  background: white;
+}
+
+.animated-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(from var(--angle), #3B82F6, #8B5CF6, #3B82F6);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: spin-border 4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes spin-border {
+  to {
+    --angle: 360deg;
+  }
+}
+
+/* ============================================
+   STATUS MARQUEE ANIMATION
+   ============================================ */
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+
+/* ============================================
+   PULSE ANIMATION FOR STATUS INDICATORS
+   ============================================ */
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.pulse-indicator {
+  position: relative;
+  display: inline-block;
+}
+
+.pulse-indicator::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+  animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+/* ============================================
+   FLOAT ANIMATIONS FOR METRIC CARDS
+   ============================================ */
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 3.5s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.animate-float-slow {
+  animation: float 4s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-float-slower {
+  animation: float 4.5s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+/* ============================================
+   SVG FLOW LINE ANIMATION
+   ============================================ */
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -1000;
+  }
+}
+
+.animate-flow-line {
+  stroke-dasharray: 5 10;
+  animation: flow-dash 20s linear infinite;
+}
+
+/* ============================================
+   REDUCED MOTION OVERRIDES
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animated-border::before,
+  .pulse-indicator::after,
+  .animate-float,
+  .animate-float-delayed,
+  .animate-float-slow,
+  .animate-float-slower,
+  .animate-flow-line {
+    animation: none !important;
+  }
+  
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
