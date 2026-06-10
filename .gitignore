@@ -40,8 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/.agents/
-/.commandcode/
+.agents/
+.commandcode/
 AGENTS.md 
 CLAUDE.md
 PRD.md
