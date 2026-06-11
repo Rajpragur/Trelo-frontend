@@ -16,3 +16,4 @@
 - When animating card spreads, cards should originate from a single point (typically middle-bottom) and spread outward in a firework/rocket-like burst, then settle into their final grid positions. Use both X and Y translation with staggered timing. Confidence: 0.70
 - Use risablue (#0f5bff) as a primary brand accent color for transitions, highlights, and accent elements. Confidence: 0.65
 - Decorative/texture components (like FlickeringGrid, DitherShader) should be placed in the background layer of sections — behind the content with pointer-events-none — not integrated as visible foreground elements that displace or restructure the original layout. Confidence: 0.80
+- Use lucide-react icons (Check, Minus) for feature comparison tables instead of inline SVGs, for cleaner and more consistent iconography. Confidence: 0.65

@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   title: "Trelo — Trust Middleware for AI Agents",
   description:
     "Deterministic runtime safety and security layer for AI agents. Stop infinite loops, block duplicate payments, prevent security attacks, and slash token waste by 40-70%. One line of code. pip install trelo.",
+  icons: {
+    icon: "/logo.svg",
+  },
   openGraph: {
     title: "Trelo — Trust Middleware for AI Agents",
     description:

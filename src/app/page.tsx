@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import { motion, useScroll, useTransform, useSpring, useReducedMotion } from "motion/react";
 import { FlickeringGrid } from "@/components/FlickeringGrid";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
-import { SmoothTransition } from "@/components/SectionTransition";
 import { DitherShader } from "@/components/ui/dither-shader";
-
+import { Terminal } from "@/components/ui/terminal";
+import { SmoothTransition } from "@/components/SectionTransition";
+import { Check, Minus, MoveRight, PhoneCall } from "lucide-react";
 const slide = { duration: 0.7, ease: [0.22, 1, 0.36, 1] } as const;
 
 export default function Home() {
@@ -168,29 +169,55 @@ function Hero() {
               <span className="text-blue-600">AI agents</span>
             </motion.h1>
 
-            <motion.div
-              initial={reduce ? {} : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.35 }}
-              className="pointer-events-auto"
-            >
-              <a
-                href="#features"
-                className="inline-flex flex-col justify-between pl-10 pr-4 md:pl-18 py-2 text-white text-sm font-semibold bg-[#0f5bff] hover:bg-[#0f5bff]/95 transition-colors rounded-[3px] tracking-wide gap-6"
-                style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
-              >
-                <div className="flex justify-end">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7V17" />
-                  </svg>
-                </div>
-                <span className="text-right">Get started</span>
-              </a>
-            </motion.div>
+            <HeroHoverButton />
           </div>
         </motion.div>
       </div>
     </section>
+  );
+}
+
+function HeroHoverButton() {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      className="pointer-events-auto relative inline-block"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Ghost border 1 — wider */}
+      <motion.div
+        className="absolute inset-0 rounded-[3px] border-2 border-white pointer-events-none"
+        animate={hovered ? { x: 12, y: -12, opacity: 0.4 } : { x: 0, y: 0, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 100, damping: 15 }}
+      />
+      {/* Ghost border 2 — even wider */}
+      <motion.div
+        className="absolute inset-0 rounded-[3px] border border-white pointer-events-none"
+        animate={hovered ? { x: 20, y: -20, opacity: 0.3 } : { x: 0, y: 0, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 70, damping: 12 }}
+      />
+      {/* Button */}
+      <motion.a
+        href="#features"
+        animate={hovered ? { x: 8, y: -8 } : { x: 0, y: 0 }}
+        transition={{ type: "spring", stiffness: 100, damping: 15 }}
+        className="relative inline-flex flex-col justify-between pl-10 pr-4 md:pl-18 py-2 text-white text-sm font-semibold bg-[#0f5bff] rounded-[3px] tracking-wide gap-6"
+        style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
+      >
+        <motion.div
+          className="flex justify-end"
+          animate={hovered ? { scale: 1.25, rotate: 6 } : { scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 12 }}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7V17" />
+          </svg>
+        </motion.div>
+        <span className="text-right">Get started</span>
+      </motion.a>
+    </div>
   );
 }
 
@@ -271,10 +298,8 @@ function FeaturesSection() {
                   key={card.label}
                   data-card
                   style={reduce ? { fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" } : { x: tx, y: ty, opacity, scale, fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
-                  className="flex flex-col items-center text-center bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 p-5"
                 >
-                  <h3 className="text-sm font-semibold text-trelo-text mb-1.5">{card.title}</h3>
-                  <p className="text-xs text-gray-400 leading-relaxed">{card.desc}</p>
+                  <HoverableCard card={card} />
                 </motion.div>
               );
             })}
@@ -283,6 +308,32 @@ function FeaturesSection() {
       </div>
     </section>
     
+  );
+}
+
+function HoverableCard({ card }: { card: typeof FEATURE_CARDS[number] }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+      <motion.div
+        animate={hovered ? { y: -6, x: 2, rotateZ: -0.5 } : { y: 0, x: 0, rotateZ: 0 }}
+        transition={{ type: "spring", stiffness: 200, damping: 18 }}
+        className="flex flex-col items-center text-center bg-white rounded-xl border border-gray-100 shadow-sm p-5 cursor-default"
+        style={{
+          boxShadow: hovered
+            ? "0 8px 30px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)"
+            : "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
+        }}
+      >
+        <h3 className="text-sm font-semibold text-trelo-text mb-1.5" style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}>
+          {card.title}
+        </h3>
+        <p className="text-xs text-gray-400 leading-relaxed" style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}>
+          {card.desc}
+        </p>
+      </motion.div>
+    </div>
   );
 }
 
@@ -304,14 +355,14 @@ function StatsSection() {
         colorMode="grayscale"
         invert={true}
         animated={false}
-        primaryColor="#000000"
-        secondaryColor="#ffffff"
-        threshold={0.5}
+        primaryColor="#0f5bff"
+        secondaryColor="#000000"
+        threshold={0.8}
         className="absolute inset-0 w-full h-full opacity-[0.15] pointer-events-none"
       />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 w-full">
-        <div className="grid lg:grid-cols-[1fr_2fr] gap-16 lg:gap-24 items-center">
+        <div className="grid lg:grid-cols-[1fr_2fr] gap-16 lg:gap-32 items-center">
           <motion.div
             initial={reduce ? {} : { opacity: 0, x: -24 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -359,13 +410,13 @@ function StatsSection() {
                 >
                   <div className={`absolute -top-3 left-0 w-12 h-1 rounded-full bg-[#0f5bff] opacity-60`} />
                   <div
-                    className="text-5xl md:text-6xl lg:text-7xl font-bold text-trelo-text tracking-tight"
+                    className="text-5xl md:text-6xl lg:text-7xl font-thin text-trelo-text tracking-tight"
                     style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
                   >
                     <AnimatedCounter value={s.value} suffix={s.suffix} />
                   </div>
                   <div
-                    className="text-sm text-gray-400 font-medium mt-2"
+                    className="text-sm text-gray-700 font-medium mt-2"
                     style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
                   >
                     {s.label}
@@ -380,10 +431,6 @@ function StatsSection() {
   );
 }
 
-/* ========================================================
-   HOW IT WORKS — staggered cards + terminal on side
-   ======================================================== */
-
 function HowItWorksSection() {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLElement>(null);
@@ -396,7 +443,7 @@ function HowItWorksSection() {
         <FlickeringGrid
           squareSize={4}
           gridGap={7}
-          color="rgb(139, 92, 246)"
+          color="rgb(15, 91, 255)"
           maxOpacity={0.06}
           flickerChance={0.08}
           className="absolute inset-0"
@@ -411,33 +458,29 @@ function HowItWorksSection() {
           viewport={{ once: true, margin: "-80px" }}
           transition={{ ...slide }}
           className="mb-16 max-w-xl"
+          style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
         >
-          <h2 className="text-3xl md:text-5xl font-bold text-trelo-text tracking-tight mb-4">
-            Three lines to production
+          <h2 className="text-3xl md:text-5xl font-thin text-trelo-text tracking-[-0.03em] leading-[1.05] mb-4">
+            Two steps.
+            <br />
+            <span className="font-thin text-blue-600">Zero config.</span>
           </h2>
-          <p className="text-lg text-gray-500 leading-relaxed">
-            No config files. No infrastructure changes. Works with any agent framework.
-          </p>
         </motion.div>
 
         <div className="grid lg:grid-cols-[1fr_1.2fr] gap-16 items-start">
-          {/* Left: staggered steps */}
-          <div className="space-y-5">
+          <div className="space-y-10">
             {[
               {
-                label: "Install",
-                detail: "One command. Python, FastAPI, SQLite. No external services needed.",
+                label: "Install the guard",
+                detail: "One command. Python, FastAPI, SQLite. No external services, no config files, no infrastructure changes.",
                 code: "pip install trelo",
+                badge: "Setup once",
               },
               {
-                label: "Start the proxy",
-                detail: "Lightweight proxy server. All 8 layers active immediately.",
-                code: "trelo serve --port 8000",
-              },
-              {
-                label: "Point your agent",
-                detail: "Change one line in your agent config. Everything else stays the same.",
-                code: 'agent = Agent(base_url="http://localhost:8000/v1")',
+                label: "Wrap your agent",
+                detail: "Add one line to your agent code. Circuit breakers, dedup, firewall, and audit trail activate immediately.",
+                code: 'agent = Agent(guard="trelo")',
+                badge: "Runtime",
               },
             ].map((step, i) => (
               <motion.div
@@ -445,18 +488,23 @@ function HowItWorksSection() {
                 initial={reduce ? {} : { opacity: 0, x: -24 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ ...slide, delay: i * 0.08 }}
-                className={`flex gap-5 ${i !== 0 ? "ml-6 md:ml-10" : ""}`}
+                transition={{ ...slide, delay: i * 0.1 }}
+                className="flex gap-5"
               >
                 <div className="flex-shrink-0">
-                  <div className="w-9 h-9 rounded-full bg-white ring-1 ring-inset ring-gray-200 flex items-center justify-center">
-                    <span className="text-xs font-bold text-gray-500">{i + 1}</span>
+                  <div className="w-10 h-10 rounded-xs bg-white ring-1 ring-inset ring-gray-200 flex items-center justify-center">
+                    <span className="text-sm font-bold text-blue-600">{i + 1}</span>
                   </div>
                 </div>
-                <div className="pt-1">
-                  <h3 className="text-sm font-semibold text-trelo-text mb-1">{step.label}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed mb-2">{step.detail}</p>
-                  <code className="inline-block px-2.5 py-1 rounded bg-gray-50 font-mono text-xs text-gray-600">
+                <div className="pt-0.5 flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-sm font-semibold text-trelo-text">{step.label}</h3>
+                    <span className="text-[10px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+                      {step.badge}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500 leading-relaxed mb-3">{step.detail}</p>
+                  <code className="inline-block px-3 py-1.5 rounded-lg bg-gray-50 font-mono text-xs text-gray-600 ring-1 ring-inset ring-gray-100">
                     {step.code}
                   </code>
                 </div>
@@ -464,45 +512,27 @@ function HowItWorksSection() {
             ))}
           </div>
 
-          {/* Right: terminal */}
           <motion.div
             initial={reduce ? {} : { opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ ...slide, delay: 0.15 }}
           >
-            <div className="rounded-xl bg-gray-900 shadow-2xl overflow-hidden border border-gray-800">
-              <div className="flex items-center gap-2 px-5 py-3.5 bg-gray-800/80 border-b border-gray-700/50">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                </div>
-                <span className="text-xs text-gray-500 font-mono ml-3">shell</span>
-              </div>
-              <div className="p-6 font-mono text-sm leading-relaxed space-y-3.5">
-                <div>
-                  <div className="text-gray-500 text-[11px] mb-0.5"># Install</div>
-                  <div className="text-green-400"><span className="text-gray-600">$</span> pip install trelo</div>
-                </div>
-                <div>
-                  <div className="text-gray-500 text-[11px] mb-0.5"># Start the proxy</div>
-                  <div className="text-green-400"><span className="text-gray-600">$</span> trelo serve --port 8000</div>
-                </div>
-                <div>
-                  <div className="text-gray-500 text-[11px] mb-0.5"># Point your agent</div>
-                  <div className="text-blue-400">
-                    agent = Agent(<br/>
-                    {"  "}base_url=<span className="text-amber-400">"http://localhost:8000/v1"</span><br/>
-                    )
-                  </div>
-                </div>
-                <div className="pt-3 border-t border-gray-800 flex items-center gap-2.5">
-                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  <span className="text-green-400 text-xs">8 protection layers active</span>
-                </div>
-              </div>
-            </div>
+            <Terminal
+              commands={[
+                "pip install trelo",
+                "trelo serve --port 8000",
+                'agent = Agent(base_url="http://localhost:8000/v1")',
+              ]}
+              outputs={{
+                0: ["✔ Installing trelo...", "✔ 8 protection layers ready."],
+                1: ["✔ Proxy running on port 8000", "✔ All layers active"],
+                2: ["✔ Agent connected", "✔ 8 layers protecting your agent"],
+              }}
+              typingSpeed={40}
+              delayBetweenCommands={800}
+              className="w-full"
+            />
           </motion.div>
         </div>
       </div>
@@ -511,113 +541,140 @@ function HowItWorksSection() {
 }
 
 /* ========================================================
-   PRICING — asymmetric stack
+   PRICING
+   ======================================================== *//* ========================================================
+   PRICING — clean 3-column, center aligned, Enterprise below
    ======================================================== */
 
 function PricingSection() {
   const reduce = useReducedMotion();
+  const ref = useRef<HTMLElement>(null);
 
   const plans = [
-    {
-      name: "Open source",
-      price: "Free",
-      period: " — forever",
-      features: ["Core proxy", "Circuit breaker", "Loop detection", "Audit logging"],
-      cta: "Star on GitHub",
-      prominent: false,
-    },
-    {
-      name: "Pro",
-      price: "$29",
-      period: "/month",
-      features: ["Everything in Open Source", "Semantic dedup", "Trajectory recovery", "Model-aware routing", "Dashboard"],
-      cta: "Get started",
-      prominent: true,
-    },
-    {
-      name: "Team",
-      price: "$299",
-      period: "/month",
-      features: ["Everything in Pro", "Agent firewall", "Cost policies", "A/B testing", "Team dashboard"],
-      cta: "Start free trial",
-      prominent: false,
-    },
-    {
-      name: "Enterprise",
-      price: "Custom",
-      period: "",
-      features: ["Everything in Team", "SOC2/ISO compliance", "SSO/SAML", "Dedicated tenant", "SLA & support"],
-      cta: "Contact sales",
-      prominent: false,
-    },
+    { name: "Free", price: "$0", desc: "For experimenting.", cta: "Star on GitHub", icon: null, features: ["10K/mo", "3", "7 days", false, false, false, false, "Basic", "Basic"] },
+    { name: "Pro", price: "$29", period: "/mo", desc: "For indie devs shipping products.", cta: "Get started", icon: MoveRight, prominent: true, features: ["100K/mo", "10", "30 days", false, true, true, false, "Advanced", "Advanced"] },
+    { name: "Team", price: "$299", period: "/mo", desc: "For teams at scale.", cta: "Start trial", icon: MoveRight, features: ["500K/mo", "Unlimited", "90 days", true, true, true, false, "Team", "Advanced"] },
+  ];
+
+  const featureLabels = [
+    "Requests / month",
+    "Agents",
+    "Log retention",
+    "SSO",
+    "Cost policies",
+    "Testing sandbox",
+    "Compliance reports",
+    "Dashboard",
+    "Model routing",
   ];
 
   return (
-    <section id="pricing" className="relative min-h-[100dvh] flex items-center py-32 overflow-hidden">
-      <div className="max-w-[1400px] mx-auto px-6 w-full">
-        <motion.div
-          initial={reduce ? {} : { opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ ...slide }}
-          className="mb-16 max-w-xl"
-        >
-          <h2 className="text-3xl md:text-5xl font-bold text-trelo-text tracking-tight mb-4">
-            Start free, scale when ready
+    <section ref={ref} id="pricing" className="relative py-20 lg:py-40 overflow-hidden bg-white">
+      <div className="max-w-[1000px] mx-auto px-6 w-full">
+        <div className="flex flex-col items-center gap-4 text-center mb-16" style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}>
+          <span className="text-xs font-semibold text-blue-600 tracking-widest uppercase">PRICING</span>
+          <h2 className="text-3xl md:text-5xl font-light text-trelo-text tracking-[-0.03em] leading-[1.05]">
+            Start free.
+            <br />
+            <span className="text-blue-600 font-normal">Scale when ready.</span>
           </h2>
-          <p className="text-lg text-gray-500 leading-relaxed">
-            Open source core. Upgrade for advanced protection layers.
-          </p>
-        </motion.div>
+        </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {plans.map((plan, i) => (
-            <motion.div
-              key={plan.name}
-              initial={reduce ? {} : { opacity: 0, y: 28 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ ...slide, delay: i * 0.06 }}
-              className={`relative rounded-xl p-6 transition-all ${
-                plan.prominent
-                  ? "bg-trelo-text text-white shadow-xl lg:scale-[1.03] lg:-mt-2 lg:-mb-2"
-                  : "bg-white border border-gray-100 hover:border-trelo-accent/20"
-              }`}
-            >
-              <p className={`text-sm font-semibold mb-2 ${plan.prominent ? "text-white" : "text-trelo-text"}`}>
-                {plan.name}
-              </p>
-              <div className="mb-5">
-                <span className={`text-2xl font-bold ${plan.prominent ? "text-white" : "text-trelo-text"}`}>
-                  {plan.price}
-                </span>
-                <span className={`text-sm ${plan.prominent ? "text-gray-400" : "text-gray-400"}`}>
-                  {plan.period}
-                </span>
+        {/* Desktop table — hidden on mobile */}
+        <div className="hidden md:block border border-gray-100 rounded-xl overflow-hidden mx-auto" style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}>
+          <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr] bg-gray-50">
+            <div className="p-6" />
+            {plans.map((plan) => (
+              <div key={plan.name} className={`p-6 flex flex-col items-center text-center gap-2 ${plan.prominent ? "bg-blue-50/60" : ""}`}>
+                <p className={`text-sm font-semibold tracking-wide ${plan.prominent ? "text-blue-600" : "text-gray-500"}`}>{plan.name}</p>
+                <p className="flex items-baseline gap-1">
+                  <span className={`text-4xl font-light tracking-[-0.02em] ${plan.prominent ? "text-blue-600" : "text-trelo-text"}`}>{plan.price}</span>
+                  {plan.period && <span className="text-sm font-light text-gray-400">{plan.period}</span>}
+                </p>
+                <p className="text-xs font-light text-gray-400">{plan.desc}</p>
+                <a href="#" className={`inline-flex items-center justify-center gap-2 mt-3 py-2.5 px-5 rounded-[3px] text-sm font-normal transition-colors ${plan.prominent ? "bg-blue-600 hover:bg-blue-500 text-white" : "bg-gray-100 hover:bg-gray-200 text-trelo-text"}`}>
+                  {plan.cta}{plan.icon && <plan.icon className="w-3.5 h-3.5" />}
+                </a>
               </div>
-              <ul className="space-y-2.5 mb-6">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm">
-                    <svg className="w-4 h-4 mt-0.5 flex-shrink-0 text-trelo-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className={plan.prominent ? "text-gray-200" : "text-gray-500"}>{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="#"
-                className={`block w-full text-center py-2.5 rounded-md text-sm font-medium transition-all active:scale-[0.98] ${
-                  plan.prominent
-                    ? "bg-white text-trelo-text hover:bg-gray-100"
-                    : "bg-gray-50 hover:bg-gray-100 text-trelo-text"
-                }`}
-              >
-                {plan.cta}
-              </a>
-            </motion.div>
+            ))}
+          </div>
+          {featureLabels.map((label, ri) => (
+            <div key={label} className={`grid grid-cols-[1.2fr_1fr_1fr_1fr] ${ri % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+              <div className="p-3.5 text-sm font-medium text-gray-500 flex items-center">{label}</div>
+              {plans.map((plan, pi) => {
+                const val = plan.features[ri];
+                const isCheck = typeof val === "boolean";
+                return (
+                  <div key={pi} className={`p-3.5 flex items-center justify-center ${plan.prominent ? "bg-blue-50/20" : ""}`}>
+                    {isCheck ? (val ? <Check className="w-4 h-4 text-green-600" /> : <Minus className="w-4 h-4 text-gray-300" />) : (
+                      <span className={`text-sm font-light ${plan.prominent ? "text-blue-700" : "text-gray-600"}`}>{val}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           ))}
         </div>
+
+        {/* Mobile pricing cards */}
+        <div className="md:hidden space-y-4" style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}>
+          {plans.map((plan) => (
+            <div key={plan.name} className={`border rounded-xl p-5 ${plan.prominent ? "border-blue-200 bg-blue-50/40" : "border-gray-100"}`}>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className={`text-sm font-semibold ${plan.prominent ? "text-blue-600" : "text-gray-500"}`}>{plan.name}</p>
+                  <p className="flex items-baseline gap-1 mt-0.5">
+                    <span className={`text-3xl font-light tracking-[-0.02em] ${plan.prominent ? "text-blue-600" : "text-trelo-text"}`}>{plan.price}</span>
+                    {plan.period && <span className="text-sm font-light text-gray-400">{plan.period}</span>}
+                  </p>
+                </div>
+                <a href="#" className={`inline-flex items-center gap-2 py-2 px-4 rounded-[3px] text-xs font-normal ${plan.prominent ? "bg-blue-600 text-white" : "bg-gray-100 text-trelo-text"}`}>
+                  {plan.cta}{plan.icon && <plan.icon className="w-3 h-3" />}
+                </a>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                {featureLabels.map((label, ri) => {
+                  const val = plan.features[ri];
+                  const isCheck = typeof val === "boolean";
+                  return (
+                    <div key={label} className="flex items-center gap-2 text-xs">
+                      <span className="text-gray-400 font-light">{label}</span>
+                      {isCheck ? (val ? <Check className="w-3 h-3 text-green-600 ml-auto" /> : <Minus className="w-3 h-3 text-gray-300 ml-auto" />) : (
+                        <span className="text-gray-600 font-light ml-auto">{val}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Enterprise card — below the table */}
+        <div className="flex justify-center mt-6">
+          <div className="border border-gray-100 rounded-xl p-6 flex flex-col items-center text-center gap-2 bg-gray-50/50 max-w-sm w-full" style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}>
+            <span className="text-xs font-semibold text-blue-600 tracking-widest uppercase">Enterprise</span>
+            <span className="text-2xl font-light text-trelo-text">Custom</span>
+            <p className="text-xs font-light text-gray-400">Dedicated support, SSO, compliance reports, unlimited everything.</p>
+            <a href="#" className="inline-flex items-center justify-center gap-2 mt-2 py-2.5 px-5 rounded-[3px] text-sm font-normal bg-white border border-gray-200 hover:border-gray-300 text-trelo-text transition-colors">
+              Contact us <PhoneCall className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        </div>
+
+        <motion.div
+          initial={reduce ? {} : { opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ ...slide, delay: 0.3 }}
+          className="text-center mt-10"
+          style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
+        >
+          <p className="text-sm font-light text-gray-500">
+            Open source? Self-host Trelo for free. MIT licensed.{" "}
+            <a href="https://github.com" target="_blank" className="text-blue-600 font-normal hover:underline underline-offset-2">GitHub →</a>
+          </p>
+        </motion.div>
       </div>
     </section>
   );
@@ -631,35 +688,25 @@ function CTASection() {
   const reduce = useReducedMotion();
 
   return (
-    <section className="relative py-32 overflow-hidden section-fade-to-blue">
-      <FlickeringGrid
-        squareSize={4}
-        gridGap={6}
-        color="rgb(139, 92, 246)"
-        maxOpacity={0.08}
-        flickerChance={0.1}
-        className="absolute inset-0"
-        maskImage="radial-gradient(ellipse 50% 50% at 50% 50%, black 8%, transparent 75%)"
-      />
-
-      <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
+    <section className="relative py-24 md:py-32 overflow-hidden bg-white">
+      <div className="relative z-10 max-w-3xl mx-auto px-6 text-center" style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}>
         <motion.h2
           initial={reduce ? {} : { opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ ...slide }}
-          className="text-3xl md:text-5xl font-bold text-trelo-text tracking-tight mb-6"
+          className="text-3xl md:text-5xl font-light text-trelo-text tracking-[-0.03em] leading-[1.05] mb-6"
         >
           One line of code.
           <br />
-          <span className="text-accent">Eight layers of protection.</span>
+          <span className="text-blue-600 font-normal">Eight layers of protection.</span>
         </motion.h2>
         <motion.p
           initial={reduce ? {} : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ ...slide, delay: 0.08 }}
-          className="text-lg text-gray-500 mb-10 max-w-lg mx-auto"
+          className="text-lg text-gray-400 font-light mb-10 max-w-lg mx-auto"
         >
           Your agents should ship fast, not burn your API budget at 3 AM.
         </motion.p>
@@ -670,15 +717,14 @@ function CTASection() {
           transition={{ ...slide, delay: 0.16 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-3"
         >
-          <a href="https://github.com" target="_blank" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-md bg-trelo-text hover:bg-trelo-text/90 text-white text-sm font-medium transition-colors active:scale-[0.98]">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          <a href="https://github.com" target="_blank" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-[3px] bg-blue-600 hover:bg-blue-500 text-white text-sm font-normal transition-colors">
             Star on GitHub
           </a>
-          <a href="#pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-md border border-gray-200 hover:border-gray-300 text-trelo-text text-sm font-medium transition-colors active:scale-[0.98]">View pricing</a>
+          <a href="#pricing" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-[3px] border border-gray-200 hover:border-gray-300 text-trelo-text text-sm font-normal transition-colors">
+            View pricing
+          </a>
         </motion.div>
       </div>
-
-      <SmoothTransition from="blue" to="white" />
     </section>
   );
 }
@@ -689,41 +735,48 @@ function CTASection() {
 
 function FooterSection() {
   return (
-    <footer className="py-12 bg-white">
-      <div className="max-w-[1400px] mx-auto px-6">
-        <div className="grid md:grid-cols-[1fr_auto] gap-8 items-start">
-          <div className="flex items-center gap-3">
-            <span className="w-7 h-7 rounded bg-trelo-text flex items-center justify-center text-white text-xs font-bold">T</span>
-            <div>
-              <p className="text-sm font-semibold text-trelo-text">Trelo</p>
-              <p className="text-xs text-gray-400">Trust middleware for AI agents</p>
-            </div>
+    <footer className="py-16 bg-gray-50 border-t border-gray-100" style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}>
+      <div className="max-w-[1200px] mx-auto px-6">
+        <div className="flex flex-col md:flex-row justify-between gap-10">
+          <div className="max-w-xs">
+            <a href="#" className="text-trelo-text font-medium text-xl tracking-tight">Trelo</a>
+            <p className="text-sm font-light text-gray-400 mt-3 leading-relaxed">
+              Trust middleware for AI agents. One line of code, eight layers of protection.
+            </p>
           </div>
-          <div className="grid grid-cols-3 gap-12 text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-16">
             <div>
               <p className="text-xs text-gray-400 font-medium mb-3">Product</p>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-600 hover:text-trelo-text transition-colors">Features</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-trelo-text transition-colors">Pricing</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-trelo-text transition-colors">Docs</a></li>
+                <li><a href="#features" className="text-sm font-light text-gray-500 hover:text-trelo-text transition-colors">Features</a></li>
+                <li><a href="#pricing" className="text-sm font-light text-gray-500 hover:text-trelo-text transition-colors">Pricing</a></li>
+                <li><a href="#" className="text-sm font-light text-gray-500 hover:text-trelo-text transition-colors">Docs</a></li>
               </ul>
             </div>
             <div>
               <p className="text-xs text-gray-400 font-medium mb-3">Company</p>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-600 hover:text-trelo-text transition-colors">About</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-trelo-text transition-colors">Blog</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-trelo-text transition-colors">Discord</a></li>
+                <li><a href="#" className="text-sm font-light text-gray-500 hover:text-trelo-text transition-colors">About</a></li>
+                <li><a href="#" className="text-sm font-light text-gray-500 hover:text-trelo-text transition-colors">Blog</a></li>
+                <li><a href="#" className="text-sm font-light text-gray-500 hover:text-trelo-text transition-colors">Discord</a></li>
               </ul>
             </div>
             <div>
               <p className="text-xs text-gray-400 font-medium mb-3">Legal</p>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-600 hover:text-trelo-text transition-colors">Privacy</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-trelo-text transition-colors">Terms</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-trelo-text transition-colors">Security</a></li>
+                <li><a href="#" className="text-sm font-light text-gray-500 hover:text-trelo-text transition-colors">Privacy</a></li>
+                <li><a href="#" className="text-sm font-light text-gray-500 hover:text-trelo-text transition-colors">Terms</a></li>
+                <li><a href="#" className="text-sm font-light text-gray-500 hover:text-trelo-text transition-colors">Security</a></li>
               </ul>
             </div>
+          </div>
+        </div>
+        <div className="mt-12 pt-6 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-xs font-light text-gray-400">© 2025 Trelo. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <a href="https://github.com" target="_blank" className="text-gray-400 hover:text-trelo-text transition-colors">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            </a>
           </div>
         </div>
       </div>
