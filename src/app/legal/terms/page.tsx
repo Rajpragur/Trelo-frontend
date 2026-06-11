@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import NavBar from "@/components/NavBar";
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-300" style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}>
-      <div className="max-w-3xl mx-auto px-6 py-24">
-        <Link href="/legal" className="text-xs text-gray-500 hover:text-blue-400 transition-colors mb-8 inline-block">← Back to Legal</Link>
-        <h1 className="text-4xl font-light text-white tracking-[-0.03em] mb-2">Terms of Service</h1>
-        <p className="text-sm text-gray-500 mb-16">Effective date: June 1, 2026</p>
+    <div className="min-h-screen bg-white text-trelo-text" style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}>
+      <NavBar />
+      <div className="max-w-3xl mx-auto px-6 pt-32 pb-24">
+        <Link href="/legal" className="text-xs text-gray-400 hover:text-blue-600 transition-colors mb-8 inline-block">← Back to Legal</Link>
+        <h1 className="text-4xl md:text-5xl font-light text-trelo-text tracking-[-0.03em] mb-2">Terms of Service</h1>
+        <p className="text-sm text-gray-400 font-light mb-16">Effective date: June 1, 2026</p>
 
         <div className="space-y-14">
           <Section title="1. Acceptance of Terms">
@@ -43,8 +45,8 @@ export default function TermsPage() {
           </Section>
 
           <Section title="6. Cancellation & Termination">
-            <p><strong className="text-white">By You.</strong> You may cancel your subscription at any time. Cancellation takes effect at the end of your current billing period. No refunds are provided for partial months.</p>
-            <p><strong className="text-white">By Us.</strong> We may suspend or terminate your access to the Service if you violate these Terms. We will make reasonable efforts to notify you prior to termination and provide an opportunity to cure the violation where appropriate.</p>
+            <p><strong className="text-trelo-text">By You.</strong> You may cancel your subscription at any time. Cancellation takes effect at the end of your current billing period. No refunds are provided for partial months.</p>
+            <p><strong className="text-trelo-text">By Us.</strong> We may suspend or terminate your access to the Service if you violate these Terms. We will make reasonable efforts to notify you prior to termination and provide an opportunity to cure the violation where appropriate.</p>
             <p>Upon termination, your data will be retained for 14 days to allow you to export it, after which it will be permanently deleted.</p>
           </Section>
 
@@ -67,7 +69,7 @@ export default function TermsPage() {
           </Section>
 
           <Section title="11. Contact">
-            <p>For questions about these Terms, contact <a href="mailto:legal@trelo.com" className="text-blue-400 hover:underline">legal@trelo.com</a>.</p>
+            <p>For questions about these Terms, contact <a href="mailto:legal@trelo.com" className="text-blue-600 hover:underline">legal@trelo.com</a>.</p>
           </Section>
         </div>
       </div>
@@ -78,8 +80,8 @@ export default function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="text-lg font-medium text-white mb-4">{title}</h2>
-      <div className="space-y-3 text-sm leading-relaxed text-gray-400">{children}</div>
+      <h2 className="text-lg font-medium text-trelo-text mb-4">{title}</h2>
+      <div className="space-y-3 text-sm leading-relaxed text-gray-500 font-light">{children}</div>
     </div>
   );
 }
