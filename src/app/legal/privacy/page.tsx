@@ -50,7 +50,7 @@ export default function PrivacyPage() {
               <li><strong className="text-trelo-text">Deletion</strong> — request account and data deletion</li>
               <li><strong className="text-trelo-text">Portability</strong> — export your data in a machine-readable format</li>
             </ul>
-            <p>To exercise any of these rights, email <a href="mailto:privacy@trelo.com" className="text-blue-600 hover:underline">privacy@trelo.com</a>. We respond within 30 days.</p>
+            <p>To exercise any of these rights, email <a href="mailto:privacy@trelo.cc" className="text-blue-600 hover:underline">privacy@trelo.cc</a>. We respond within 30 days.</p>
           </Section>
 
           <Section title="6. Security">
@@ -58,7 +58,7 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="7. Contact">
-            <p>For privacy-related inquiries: <a href="mailto:privacy@trelo.com" className="text-blue-600 hover:underline">privacy@trelo.com</a></p>
+            <p>For privacy-related inquiries: <a href="mailto:privacy@trelo.cc" className="text-blue-600 hover:underline">privacy@trelo.cc</a></p>
           </Section>
         </div>
       </div>

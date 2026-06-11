@@ -789,7 +789,7 @@ function PricingSection() {
                 </p>
                 <p className="text-xs font-light text-gray-400">{plan.desc}</p>
                 <a
-                  href="/login"
+                  href="#"
                   className={`inline-flex items-center justify-center gap-2 mt-3 py-2.5 px-5 rounded-[3px] text-sm font-normal transition-colors ${
                     plan.prominent
                       ? "bg-blue-600 hover:bg-blue-500 text-white"
@@ -867,7 +867,7 @@ function PricingSection() {
                   </p>
                 </div>
                 <a
-                  href="/login"
+                  href="#"
                   className={`inline-flex items-center gap-2 py-2 px-4 rounded-[3px] text-xs font-normal ${
                     plan.prominent
                       ? "bg-blue-600 text-white"
@@ -916,7 +916,7 @@ function PricingSection() {
               Dedicated support, SSO, compliance reports, unlimited everything.
             </p>
             <a
-              href="/contact"
+              href="#"
               className="inline-flex items-center justify-center gap-2 mt-2 py-2.5 px-5 rounded-[3px] text-sm font-normal bg-white border border-gray-200 hover:border-gray-300 text-trelo-text transition-colors"
             >
               Contact us <PhoneCall className="w-3.5 h-3.5" />
@@ -935,7 +935,7 @@ function PricingSection() {
           <p className="text-sm font-light text-gray-500">
             Open source? Self-host Trelo for free. MIT licensed.{" "}
             <a
-              href="https://github.com/trelo"
+              href="https://github.com"
               target="_blank"
               className="text-blue-600 font-normal hover:underline underline-offset-2"
             >
@@ -1081,7 +1081,7 @@ function FooterSection() {
           </p>
           <div className="flex items-center gap-4">
             <a
-              href="https://github.com/trelo"
+              href="https://github.com"
               target="_blank"
               className="text-gray-400 hover:text-trelo-text transition-colors"
             >

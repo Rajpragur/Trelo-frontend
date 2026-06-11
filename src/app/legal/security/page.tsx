@@ -50,20 +50,20 @@ export default function SecurityPage() {
             <ul className="space-y-3 text-sm">
               <li><strong className="text-trelo-text">SOC2 Type I</strong> — In progress. Audit by independent third-party firm. Expected completion Q3 2026.</li>
               <li><strong className="text-trelo-text">GDPR</strong> — Compliant. Data processing agreements available. EU-based customers can request data residency in AWS eu-west-1.</li>
-              <li><strong className="text-trelo-text">CCPA</strong> — Ready. California residents may request data access and deletion via privacy@trelo.com.</li>
+              <li><strong className="text-trelo-text">CCPA</strong> — Ready. California residents may request data access and deletion via privacy@trelo.cc.</li>
             </ul>
           </Section>
 
           <Section title="Vulnerability Management">
             <p>We take security reports seriously. If you discover a vulnerability, please report it to us immediately.</p>
             <ul className="space-y-2 text-sm">
-              <li><strong className="text-trelo-text">Report to:</strong> <a href="mailto:security@trelo.com" className="text-blue-600 hover:underline">security@trelo.com</a></li>
+              <li><strong className="text-trelo-text">Report to:</strong> <a href="mailto:security@trelo.cc" className="text-blue-600 hover:underline">security@trelo.cc</a></li>
               <li><strong className="text-trelo-text">Response time:</strong> We acknowledge reports within 24 hours</li>
               <li><strong className="text-trelo-text">Resolution:</strong> Critical vulnerabilities are patched within 72 hours</li>
               <li><strong className="text-trelo-text">PGP Key:</strong> Available upon request</li>
             </ul>
             <a
-              href="mailto:security@trelo.com"
+              href="mailto:security@trelo.cc"
               className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-[3px] bg-red-50 border border-red-200 text-red-600 text-sm font-medium hover:bg-red-100 transition-colors"
             >
               Report a vulnerability

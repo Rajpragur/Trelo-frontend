@@ -23,7 +23,7 @@ const productLinks: DropdownLink[] = [
 const resourceLinks: DropdownLink[] = [
   { title: "Documentation", href: "/docs", desc: "Integration guides, API reference, deployment." },
   { title: "Discord", href: "https://discord.gg/UTXTN5krm", desc: "Real-time community support." },
-  { title: "GitHub", href: "https://github.com/trelo", desc: "Open source. MIT licensed." },
+  { title: "GitHub", href: "https://github.com", desc: "Open source. MIT licensed." },
 ];
 
 const companyLinks: DropdownLink[] = [
@@ -131,7 +131,7 @@ export default function NavBar({ scrollSwitch = false }: NavBarProps) {
           <div className="max-w-[1400px] mx-auto flex items-center justify-center py-1.5 px-8">
             <p className="text-white text-[11px] font-light tracking-wide text-center">
               Trelo is in BETA — one line of code to stop agent loops, duplicates, and attacks.{" "}
-              <a href="/login" className="underline underline-offset-2 font-medium hover:text-white/80 transition-colors">
+              <a href="#" className="underline underline-offset-2 font-medium hover:text-white/80 transition-colors">
                 Join early access
               </a>
             </p>
@@ -143,7 +143,7 @@ export default function NavBar({ scrollSwitch = false }: NavBarProps) {
         <div className="max-w-[1400px] mx-auto h-14 flex items-center justify-between px-6 md:px-8">
           <Link
             href="/"
-            className={`font-light text-xl tracking-tight transition-colors ${
+            className={`font-semibold text-xl tracking-tight transition-colors ${
               isTransparent ? "text-white" : "text-trelo-text"
             }`}
           >

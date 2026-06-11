@@ -69,7 +69,7 @@ export default function TermsPage() {
           </Section>
 
           <Section title="11. Contact">
-            <p>For questions about these Terms, contact <a href="mailto:legal@trelo.com" className="text-blue-600 hover:underline">legal@trelo.com</a>.</p>
+            <p>For questions about these Terms, contact <a href="mailto:legal@trelo.cc" className="text-blue-600 hover:underline">legal@trelo.cc</a>.</p>
           </Section>
         </div>
       </div>

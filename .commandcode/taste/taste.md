@@ -15,3 +15,9 @@ See [design/taste.md](design/taste.md)
 
 # auth
 - Sign-in and sign-up mode toggling should be animated smoothly — use motion (AnimatePresence) for transitions between the two form states rather than an instant switch. Confidence: 0.70
+
+# email
+- Use trelo.cc for all email addresses, including legal emails (not trelo.com). Confidence: 0.75
+
+# workflow
+- When asked for an audit or list of issues, present the list first and wait for approval before making fixes — do not fix proactively. Confidence: 0.70

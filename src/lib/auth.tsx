@@ -24,6 +24,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Dev mode bypass — auto-login for development
+    const isDev = typeof window !== "undefined" && window.location.hostname === "localhost";
+    if (isDev) {
+      const devUser = { email: "raj@trelo.cc", name: "Raj" };
+      sessionStorage.setItem("trelo_user", JSON.stringify(devUser));
+      setUser(devUser);
+      setIsLoading(false);
+      return;
+    }
     const stored = sessionStorage.getItem("trelo_user");
     if (stored) {
       try { setUser(JSON.parse(stored)); } catch {}

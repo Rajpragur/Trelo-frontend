@@ -28,18 +28,13 @@ export default function LegalPage() {
         <h2 className="text-xl font-light text-trelo-text mb-6">Other Legal Documents</h2>
         <div className="space-y-4 mb-20">
           {[
-            { title: "DMCA Notice", desc: "Procedures for reporting copyright infringement under the Digital Millennium Copyright Act.", available: false },
-            { title: "GDPR Representation", desc: "Our GDPR Article 27 representative and data subject request procedures.", available: false },
-            { title: "Data Processing Agreement (DPA)", desc: "Standard DPA for enterprise customers. Covers subprocessors, security measures, and data handling.", available: false },
+            { title: "DMCA Notice", desc: "Procedures for reporting copyright infringement under the Digital Millennium Copyright Act." },
+            { title: "GDPR Representation", desc: "Our GDPR Article 27 representative and data subject request procedures." },
+            { title: "Data Processing Agreement (DPA)", desc: "Standard DPA for enterprise customers. Covers subprocessors, security measures, and data handling." },
           ].map((doc) => (
-            <div key={doc.title} className="p-5 rounded-lg border border-gray-100 bg-gray-50/50 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-trelo-text mb-1">{doc.title}</h3>
-                <p className="text-xs text-gray-400 font-light">{doc.desc}</p>
-              </div>
-              <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider bg-gray-100 px-2 py-0.5 rounded-sm flex-shrink-0 ml-4">
-                Coming soon
-              </span>
+            <div key={doc.title} className="p-5 rounded-lg border border-gray-100 bg-gray-50/50">
+              <h3 className="text-sm font-medium text-trelo-text mb-1">{doc.title}</h3>
+              <p className="text-xs text-gray-400 font-light">{doc.desc}</p>
             </div>
           ))}
         </div>
@@ -48,11 +43,11 @@ export default function LegalPage() {
           <h2 className="text-xl font-light text-trelo-text mb-3">Contact</h2>
           <p className="text-sm text-gray-400 font-light mb-2">
             For legal inquiries:{" "}
-            <a href="mailto:legal@trelo.com" className="text-blue-600 hover:underline">legal@trelo.com</a>
+            <a href="mailto:legal@trelo.cc" className="text-blue-600 hover:underline">legal@trelo.cc</a>
           </p>
           <p className="text-sm text-gray-400 font-light">
             For privacy requests:{" "}
-            <a href="mailto:privacy@trelo.com" className="text-blue-600 hover:underline">privacy@trelo.com</a>
+            <a href="mailto:privacy@trelo.cc" className="text-blue-600 hover:underline">privacy@trelo.cc</a>
           </p>
         </div>
       </div>
