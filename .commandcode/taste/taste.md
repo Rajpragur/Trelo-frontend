@@ -21,3 +21,4 @@ See [design/taste.md](design/taste.md)
 
 # workflow
 - When asked for an audit or list of issues, present the list first and wait for approval before making fixes — do not fix proactively. Confidence: 0.70
+- Build complete, functional implementations — do not leave placeholder/stub/empty content. Every section should be filled out and working, ready to ship. Confidence: 0.85

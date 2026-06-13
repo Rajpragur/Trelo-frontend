@@ -30,14 +30,21 @@ function GitHubIcon() {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, isLoading, signIn, signInWithGoogle, signInWithGitHub, signUp } = useAuth();
+  const { user, isLoading, signIn, signInWithGoogle, signInWithGitHub, signUp, resetPassword } = useAuth();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [forgotPassword, setForgotPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [signupSent, setSignupSent] = useState(false);
+  const [signupEmail, setSignupEmail] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitLabel, setSubmitLabel] = useState("");
+  const [oauthProvider, setOauthProvider] = useState<"google" | "github" | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -47,13 +54,44 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSubmitLabel("");
     if (!email || !password) { setError("Please fill in all fields."); return; }
     if (mode === "signup" && !name) { setError("Please enter your name."); return; }
     setSubmitting(true);
+    setSubmitLabel(mode === "signin" ? "Signing in..." : "Creating account...");
     try {
-      if (mode === "signin") await signIn(email, password);
-      else await signUp(email, password, name);
-      router.push("/dashboard");
+      const result =
+        mode === "signin"
+          ? await signIn(email, password)
+          : await signUp(email, password, name);
+      if (result.error) {
+        setError(result.error);
+        setSubmitLabel("");
+      } else if (result.needsEmailConfirmation) {
+        setSignupSent(true);
+        setSignupEmail(email);
+        setSubmitLabel("");
+      }
+    } catch {
+      setError("Something went wrong. Try again.");
+      setSubmitLabel("");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!resetEmail) { setError("Please enter your email."); return; }
+    setSubmitting(true);
+    try {
+      const result = await resetPassword(resetEmail);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setResetSent(true);
+      }
     } catch {
       setError("Something went wrong. Try again.");
     } finally {
@@ -62,14 +100,14 @@ export default function LoginPage() {
   };
 
   const handleOAuth = async (provider: "google" | "github") => {
+    setOauthProvider(provider);
     setSubmitting(true);
     try {
       if (provider === "google") await signInWithGoogle();
       else await signInWithGitHub();
-      router.push("/dashboard");
     } catch {
       setError("OAuth failed. Try again.");
-    } finally {
+      setOauthProvider(null);
       setSubmitting(false);
     }
   };
@@ -85,216 +123,467 @@ export default function LoginPage() {
   if (user && !isLoading) return null;
 
   return (
-    <div
-      className="min-h-screen flex bg-white"
-      style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
-    >
-      {/* Left — hero panel */}
-      <div className="hidden lg:flex flex-1 relative bg-gray-50 items-center justify-center p-12 overflow-hidden">
-        <div className="absolute inset-0 dot-grid opacity-30 pointer-events-none" />
-        <div className="relative max-w-md text-center">
-          <Link href="/" className="inline-block text-5xl font-thin text-trelo-text tracking-tight mb-8">
-            Trelo
-          </Link>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...slide, delay: 0.1 }}
-          >
-            <p className="text-2xl md:text-3xl font-light text-trelo-text leading-snug mb-4">
-              Trust middleware for{" "}
-              <span className="text-blue-600">AI agents</span>
-            </p>
-            <p className="text-sm text-gray-400 font-light leading-relaxed">
-              Stop infinite loops, prevent attacks, and cut token waste by 40-70%.
-              One line of code.
-            </p>
-          </motion.div>
-
+    <>
+      {/* OAuth redirect overlay */}
+      <AnimatePresence>
+        {oauthProvider && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ ...slide, delay: 0.4 }}
-            className="mt-12 flex justify-center flex-wrap gap-2"
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] bg-white/90 backdrop-blur-sm flex items-center justify-center"
           >
-            {["Circuit breaking", "Loop detection", "Prompt injection", "Cost policies"].map((tag) => (
-              <span key={tag} className="px-2.5 py-1 text-[11px] text-gray-500 bg-white border border-gray-100 rounded-sm">
-                {tag}
-              </span>
-            ))}
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Right — form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-[380px]">
-          {/* Mobile logo */}
-          <Link href="/" className="lg:hidden text-2xl font-light text-trelo-text tracking-tight mb-10 inline-block">
-            Trelo
-          </Link>
-
-          <AnimatePresence mode="wait">
             <motion.div
-              key={mode}
-              initial={{ opacity: 0, x: mode === "signin" ? -20 : 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: mode === "signin" ? 20 : -20 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="text-center"
+              style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
             >
-              {/* Heading */}
-              <div className="mb-6">
-                <h1 className="text-2xl font-light text-trelo-text tracking-[-0.02em]">
-                  {mode === "signin" ? "Sign in" : "Create account"}
-                </h1>
-                <p className="text-sm text-gray-400 mt-2 font-light">
-                  {mode === "signin" ? "Access your Trelo dashboard." : "Start protecting your AI agents."}
-                </p>
+              <div
+                className={`w-12 h-12 mx-auto mb-5 rounded-sm flex items-center justify-center ${
+                  oauthProvider === "google"
+                    ? "bg-white border border-gray-200"
+                    : "bg-gray-900 text-white"
+                }`}
+              >
+                {oauthProvider === "google" ? <GoogleIcon /> : <GitHubIcon />}
               </div>
-
-              {/* OAuth buttons */}
-              <div className="flex gap-3 mb-6">
-                <button
-                  type="button"
-                  onClick={() => handleOAuth("google")}
-                  disabled={submitting}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-sm text-sm font-normal text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                >
-                  <GoogleIcon /> Google
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleOAuth("github")}
-                  disabled={submitting}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-sm text-sm font-normal text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                >
-                  <GitHubIcon /> GitHub
-                </button>
-              </div>
-
-              <div className="relative flex items-center gap-3 mb-6">
-                <span className="flex-1 h-px bg-gray-100" />
-                <span className="text-[11px] text-gray-400 uppercase tracking-wider">or</span>
-                <span className="flex-1 h-px bg-gray-100" />
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <AnimatePresence mode="wait">
-                  {mode === "signup" && (
-                    <motion.div
-                      key="name-field"
-                      initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                      animate={{ opacity: 1, height: "auto", marginBottom: 0 }}
-                      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                    >
-                      <label className="text-xs font-medium text-gray-500 mb-1.5 block">Full name</label>
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Your name"
-                        className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-sm bg-white text-trelo-text placeholder-gray-300 outline-none focus:border-blue-500 transition-colors"
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <div>
-                  <label className="text-xs font-medium text-gray-500 mb-1.5 block">Email</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-sm bg-white text-trelo-text placeholder-gray-300 outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-gray-500 mb-1.5 block">Password</label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder={mode === "signup" ? "Create a password" : "Your password"}
-                      className="w-full px-3 py-2.5 pr-10 text-sm border border-gray-200 rounded-sm bg-white text-trelo-text placeholder-gray-300 outline-none focus:border-blue-500 transition-colors"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                {mode === "signin" && (
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      className="text-xs text-gray-400 hover:text-blue-600 transition-colors"
-                      onClick={() => setError("Reset link would be sent to your email.")}
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
-                )}
-
-                {error && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-xs text-red-500"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full py-2.5 bg-[#0f5bff] hover:bg-blue-600 text-white text-sm font-medium rounded-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-                >
-                  {submitting ? (
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      {mode === "signin" ? "Sign in" : "Create account"}
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-              </form>
-
-              <p className="text-sm text-gray-400 mt-6 text-center font-light">
-                {mode === "signin" ? (
-                  <>Don&apos;t have an account?{" "}
-                    <button onClick={() => { setMode("signup"); setError(""); }} className="text-blue-600 hover:underline font-medium">
-                      Sign up
-                    </button>
-                  </>
-                ) : (
-                  <>Already have an account?{" "}
-                    <button onClick={() => { setMode("signin"); setError(""); }} className="text-blue-600 hover:underline font-medium">
-                      Sign in
-                    </button>
-                  </>
-                )}
+              <p className="text-lg font-light text-trelo-text mb-1">
+                Redirecting to {oauthProvider === "google" ? "Google" : "GitHub"}...
               </p>
+              <p className="text-xs text-gray-400 font-light">You&apos;ll be back in a moment.</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              <p className="text-[11px] text-gray-400 mt-8 text-center leading-relaxed">
-                By continuing, you agree to Trelo&apos;s{" "}
-                <Link href="/legal/terms" className="text-gray-500 hover:text-blue-600 underline">Terms</Link>{" "}
-                and{" "}
-                <Link href="/legal/privacy" className="text-gray-500 hover:text-blue-600 underline">Privacy Policy</Link>.
+      <div
+        className="min-h-screen flex bg-white"
+        style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
+      >
+        {/* Left — hero panel */}
+        <div className="hidden lg:flex flex-1 relative bg-gray-50 items-center justify-center p-12 overflow-hidden">
+          <div className="absolute inset-0 dot-grid opacity-30 pointer-events-none" />
+          <div className="relative max-w-md text-center">
+            <Link href="/" className="inline-block text-5xl font-thin text-trelo-text tracking-tight mb-8">
+              Trelo
+            </Link>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...slide, delay: 0.1 }}
+            >
+              <p className="text-2xl md:text-3xl font-light text-trelo-text leading-snug mb-4">
+                Trust middleware for <span className="text-blue-600">AI agents</span>
+              </p>
+              <p className="text-sm text-gray-400 font-light leading-relaxed">
+                Stop infinite loops, prevent attacks, and cut token waste by 40-70%. One line of code.
               </p>
             </motion.div>
-          </AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ ...slide, delay: 0.4 }}
+              className="mt-12 flex justify-center flex-wrap gap-2"
+            >
+              {["Circuit breaking", "Loop detection", "Prompt injection", "Cost policies"].map(
+                (tag) => (
+                  <span
+                    key={tag}
+                    className="px-2.5 py-1 text-[11px] text-gray-500 bg-white border border-gray-100 rounded-sm"
+                  >
+                    {tag}
+                  </span>
+                )
+              )}
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Right — form */}
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="w-full max-w-[380px]">
+            {/* Mobile logo */}
+            <Link
+              href="/"
+              className="lg:hidden text-2xl font-light text-trelo-text tracking-tight mb-10 inline-block"
+            >
+              Trelo
+            </Link>
+
+            <AnimatePresence mode="wait">
+              {/* Signup verification sent */}
+              {signupSent && (
+                <motion.div
+                  key="signup-sent"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <div className="mb-6">
+                    <h1 className="text-2xl font-light text-trelo-text tracking-[-0.02em]">
+                      Check your email
+                    </h1>
+                    <p className="text-sm text-gray-400 mt-2 font-light leading-relaxed">
+                      We sent a verification link to <strong>{signupEmail}</strong>. Click it to
+                      activate your account, then sign in.
+                    </p>
+                  </div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
+                    className="p-4 rounded-sm bg-blue-50 border border-blue-100 mb-6"
+                  >
+                    <p className="text-xs text-blue-700 font-medium mb-2">What happens next?</p>
+                    <ul className="space-y-1.5 text-xs text-blue-600 font-light">
+                      <li>1. Open your inbox and find the email from Trelo</li>
+                      <li>
+                        2. Click <strong>Confirm your email</strong>
+                      </li>
+                      <li>3. Come back here and sign in</li>
+                    </ul>
+                  </motion.div>
+
+                  <button
+                    onClick={() => {
+                      setSignupSent(false);
+                      setMode("signin");
+                      setError("");
+                      setSubmitLabel("");
+                    }}
+                    className="w-full py-2.5 bg-[#0f5bff] hover:bg-blue-600 text-white text-sm font-medium rounded-sm transition-colors"
+                  >
+                    I&apos;ve confirmed — sign in
+                  </button>
+
+                  <p className="text-sm text-gray-400 mt-4 text-center font-light">
+                    <button
+                      onClick={() => {
+                        setSignupSent(false);
+                        setError("");
+                        setSubmitLabel("");
+                      }}
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      ← Back to create account
+                    </button>
+                  </p>
+                </motion.div>
+              )}
+
+              {/* Forgot password */}
+              {!signupSent && forgotPassword && (
+                <motion.div
+                  key="forgot"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <div className="mb-6">
+                    <h1 className="text-2xl font-light text-trelo-text tracking-[-0.02em]">
+                      Reset password
+                    </h1>
+                    <p className="text-sm text-gray-400 mt-2 font-light">
+                      {resetSent
+                        ? "Check your inbox for a reset link."
+                        : "Enter your email and we'll send you a reset link."}
+                    </p>
+                  </div>
+
+                  {resetSent ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="p-4 rounded-sm bg-green-50 border border-green-100 mb-6"
+                    >
+                      <p className="text-xs text-green-700 font-medium mb-1">Link sent</p>
+                      <p className="text-xs text-green-600 font-light leading-relaxed">
+                        We sent a password reset link to <strong>{resetEmail}</strong>. It expires
+                        in 1 hour.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => navigator.clipboard.writeText(resetEmail)}
+                        className="text-xs text-blue-600 hover:underline mt-2 inline-block"
+                      >
+                        Copy email →
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <form onSubmit={handleResetPassword} className="space-y-4">
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 mb-1.5 block">
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          value={resetEmail}
+                          onChange={(e) => setResetEmail(e.target.value)}
+                          placeholder="you@example.com"
+                          autoFocus
+                          className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-sm bg-white text-trelo-text placeholder-gray-300 outline-none focus:border-blue-500 transition-colors"
+                        />
+                      </div>
+
+                      {error && (
+                        <motion.p
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="text-xs text-red-500"
+                        >
+                          {error}
+                        </motion.p>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full py-2.5 bg-[#0f5bff] hover:bg-blue-600 text-white text-sm font-medium rounded-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                      >
+                        {submitting ? (
+                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          "Send reset link"
+                        )}
+                      </button>
+                    </form>
+                  )}
+
+                  <p className="text-sm text-gray-400 mt-6 text-center font-light">
+                    <button
+                      onClick={() => {
+                        setForgotPassword(false);
+                        setResetSent(false);
+                        setResetEmail("");
+                        setError("");
+                      }}
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      ← Back to sign in
+                    </button>
+                  </p>
+                </motion.div>
+              )}
+
+              {/* Main sign in / sign up form */}
+              {!signupSent && !forgotPassword && (
+                <motion.div
+                  key={mode}
+                  initial={{ opacity: 0, x: mode === "signin" ? -20 : 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: mode === "signin" ? 20 : -20 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {/* Heading */}
+                  <div className="flex flex-col items-center mb-6">
+                    <h1 className="text-2xl font-light text-trelo-text tracking-[-0.02em]">
+                      {mode === "signin" ? "Sign in" : "Create account"}
+                    </h1>
+                    <p className="text-sm text-gray-400 mt-2 font-light">
+                      {mode === "signin"
+                        ? "Access your Trelo dashboard."
+                        : "Start protecting your AI agents."}
+                    </p>
+                  </div>
+
+                  {/* OAuth buttons */}
+                  <div className="flex gap-3 mb-6">
+                    <button
+                      type="button"
+                      onClick={() => handleOAuth("google")}
+                      disabled={submitting}
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-sm text-sm font-normal text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    >
+                      <GoogleIcon /> Google
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOAuth("github")}
+                      disabled={submitting}
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-sm text-sm font-normal text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    >
+                      <GitHubIcon /> GitHub
+                    </button>
+                  </div>
+
+                  <div className="relative flex items-center gap-3 mb-6">
+                    <span className="flex-1 h-px bg-gray-100" />
+                    <span className="text-[11px] text-gray-400 uppercase tracking-wider">or</span>
+                    <span className="flex-1 h-px bg-gray-100" />
+                  </div>
+
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <AnimatePresence mode="wait">
+                      {mode === "signup" && (
+                        <motion.div
+                          key="name-field"
+                          initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                          animate={{ opacity: 1, height: "auto", marginBottom: 0 }}
+                          exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                        >
+                          <label className="text-xs font-medium text-gray-500 mb-1.5 block">
+                            Full name
+                          </label>
+                          <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Your name"
+                            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-sm bg-white text-trelo-text placeholder-gray-300 outline-none focus:border-blue-500 transition-colors"
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1.5 block">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-sm bg-white text-trelo-text placeholder-gray-300 outline-none focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1.5 block">
+                        Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder={
+                            mode === "signup" ? "Create a password" : "Your password"
+                          }
+                          className="w-full px-3 py-2.5 pr-10 text-sm border border-gray-200 rounded-sm bg-white text-trelo-text placeholder-gray-300 outline-none focus:border-blue-500 transition-colors"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {mode === "signin" && (
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          className="text-xs text-gray-400 hover:text-blue-600 transition-colors"
+                          onClick={() => {
+                            setForgotPassword(true);
+                            setError("");
+                          }}
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                    )}
+
+                    {error && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-xs text-red-500"
+                      >
+                        {error}
+                      </motion.p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="w-full py-2.5 bg-[#0f5bff] hover:bg-blue-600 text-white text-sm font-medium rounded-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                    >
+                      {submitting ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          {submitLabel ||
+                            (mode === "signin" ? "Signing in..." : "Creating account...")}
+                        </>
+                      ) : (
+                        <>
+                          {mode === "signin" ? "Sign in" : "Create account"}
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </>
+                      )}
+                    </button>
+                  </form>
+
+                  <p className="text-sm text-gray-400 mt-6 text-center font-light">
+                    {mode === "signin" ? (
+                      <>
+                        Don&apos;t have an account?{" "}
+                        <button
+                          onClick={() => {
+                            setMode("signup");
+                            setError("");
+                            setSubmitLabel("");
+                          }}
+                          className="text-blue-600 hover:underline font-medium"
+                        >
+                          Sign up
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        Already have an account?{" "}
+                        <button
+                          onClick={() => {
+                            setMode("signin");
+                            setError("");
+                            setSubmitLabel("");
+                          }}
+                          className="text-blue-600 hover:underline font-medium"
+                        >
+                          Sign in
+                        </button>
+                      </>
+                    )}
+                  </p>
+
+                  <p className="text-[11px] text-gray-400 mt-8 text-center leading-relaxed">
+                    By continuing, you agree to Trelo&apos;s{" "}
+                    <Link
+                      href="/legal/terms"
+                      className="text-gray-500 hover:text-blue-600 underline"
+                    >
+                      Terms
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      href="/legal/privacy"
+                      className="text-gray-500 hover:text-blue-600 underline"
+                    >
+                      Privacy Policy
+                    </Link>
+                    .
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

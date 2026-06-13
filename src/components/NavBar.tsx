@@ -139,7 +139,7 @@ export default function NavBar({ scrollSwitch = false }: NavBarProps) {
         </div>
       )}
 
-      <nav className={`transition-all duration-300 ${bgColor}`}>
+      <nav className={`transition-all duration-300 backdrop-blur-[2px] ${bgColor}`}>
         <div className="max-w-[1400px] mx-auto h-14 flex items-center justify-between px-6 md:px-8">
           <Link
             href="/"
@@ -149,7 +149,6 @@ export default function NavBar({ scrollSwitch = false }: NavBarProps) {
           >
             Trelo
           </Link>
-
           <div className="hidden md:flex items-center gap-7">
             <NavDropdown label="Product" links={productLinks} isTransparent={isTransparent} />
             <NavDropdown label="Resources" links={resourceLinks} isTransparent={isTransparent} />

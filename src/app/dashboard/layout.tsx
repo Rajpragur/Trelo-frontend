@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useAuth } from "@/lib/auth";
 import {
   Bot, Workflow, BookOpen, Wrench, Activity, BarChart3,
-  Users, Key, CreditCard, Search, Bell, LogOut, Terminal, X,
+  Users, Key, CreditCard, Search, Bell, LogOut, Terminal, X, Settings,
 } from "lucide-react";
 
 const SIDEBAR_SECTIONS = [
@@ -33,6 +33,7 @@ const SIDEBAR_SECTIONS = [
       { label: "Team", href: "/dashboard/team", icon: Users },
       { label: "API Keys", href: "/dashboard/keys", icon: Key },
       { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
+      { label: "Settings", href: "/dashboard/settings", icon: Settings },
     ],
   },
 ];
@@ -55,7 +56,7 @@ const NOTIFICATIONS = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isLoading, signOut } = useAuth();
+  const { user, isLoading, isConfigured, signOut } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,8 +65,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isLoading && !user) router.replace("/login");
-  }, [user, isLoading, router]);
+    if (!isLoading && isConfigured && !user) router.replace("/login");
+  }, [user, isLoading, isConfigured, router]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -140,11 +141,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="border-t border-gray-100 p-3">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-sm bg-blue-600 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-              {user.name[0]}
+              {(user.email ?? "U")[0].toUpperCase()}
             </div>
             {!sidebarCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-trelo-text truncate">{user.name}</p>
+                <p className="text-xs font-medium text-trelo-text truncate">
+                  {user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "User"}
+                </p>
                 <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
               </div>
             )}
@@ -262,7 +265,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </AnimatePresence>
             </div>
 
-            <button onClick={signOut} className="text-gray-400 hover:text-gray-600 transition-colors p-1.5" title="Sign out">
+            <button
+              onClick={() => {
+                signOut();
+                router.push("/login");
+              }}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1.5"
+              title="Sign out"
+            >
               <LogOut className="w-4 h-4" />
             </button>
           </div>

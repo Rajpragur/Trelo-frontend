@@ -1,20 +1,31 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react";
+import { type User } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 
-interface User {
-  email: string;
-  name: string;
+interface AuthResult {
+  error?: string;
+  needsEmailConfirmation?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  isConfigured: boolean;
+  signIn: (email: string, password: string) => Promise<AuthResult>;
   signInWithGoogle: () => Promise<void>;
   signInWithGitHub: () => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
-  signOut: () => void;
+  signUp: (email: string, password: string, name: string) => Promise<AuthResult>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<AuthResult>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -22,59 +33,110 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [supabase] = useState(() => createClient());
+  const isConfigured = supabase !== null;
 
   useEffect(() => {
-    // Dev mode bypass — auto-login for development
-    const isDev = typeof window !== "undefined" && window.location.hostname === "localhost";
-    if (isDev) {
-      const devUser = { email: "raj@trelo.cc", name: "Raj" };
-      sessionStorage.setItem("trelo_user", JSON.stringify(devUser));
-      setUser(devUser);
+    if (!supabase) {
       setIsLoading(false);
       return;
     }
-    const stored = sessionStorage.getItem("trelo_user");
-    if (stored) {
-      try { setUser(JSON.parse(stored)); } catch {}
-    }
-    setIsLoading(false);
-  }, []);
 
-  const signIn = async (_email: string, _password: string) => {
-    await new Promise((r) => setTimeout(r, 600));
-    const u = { email: _email, name: _email.split("@")[0] };
-    sessionStorage.setItem("trelo_user", JSON.stringify(u));
-    setUser(u);
-  };
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
 
-  const signInWithGoogle = async () => {
-    await new Promise((r) => setTimeout(r, 600));
-    const u = { email: "user@trelo.cc", name: "Trelo User" };
-    sessionStorage.setItem("trelo_user", JSON.stringify(u));
-    setUser(u);
-  };
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
 
-  const signInWithGitHub = async () => {
-    await new Promise((r) => setTimeout(r, 600));
-    const u = { email: "dev@trelo.cc", name: "Trelo Dev" };
-    sessionStorage.setItem("trelo_user", JSON.stringify(u));
-    setUser(u);
-  };
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
-  const signUp = async (_email: string, _password: string, _name: string) => {
-    await new Promise((r) => setTimeout(r, 600));
-    const u = { email: _email, name: _name };
-    sessionStorage.setItem("trelo_user", JSON.stringify(u));
-    setUser(u);
-  };
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      if (!supabase) return { error: "Auth not configured" };
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { error: error.message };
+      return {};
+    },
+    [supabase]
+  );
 
-  const signOut = () => {
-    sessionStorage.removeItem("trelo_user");
+  const signInWithGoogle = useCallback(async () => {
+    if (!supabase) return;
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+  }, [supabase]);
+
+  const signInWithGitHub = useCallback(async () => {
+    if (!supabase) return;
+    await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+  }, [supabase]);
+
+  const signUp = useCallback(
+    async (email: string, password: string, name: string) => {
+      if (!supabase) return { error: "Auth not configured" };
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: name },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) return { error: error.message };
+      if (data?.user?.identities?.length === 0) {
+        return { error: "An account with this email already exists." };
+      }
+      if (data?.session === null) {
+        return { needsEmailConfirmation: true };
+      }
+      return {};
+    },
+    [supabase]
+  );
+
+  const signOut = useCallback(async () => {
     setUser(null);
-  };
+    // Fire-and-forget Supabase sign out — don't block the UI
+    if (supabase) supabase.auth.signOut();
+  }, [supabase]);
+
+  const resetPassword = useCallback(
+    async (email: string) => {
+      if (!supabase) return { error: "Auth not configured" };
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login`,
+      });
+      if (error) return { error: error.message };
+      return {};
+    },
+    [supabase]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signInWithGoogle, signInWithGitHub, signUp, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        isConfigured,
+        signIn,
+        signInWithGoogle,
+        signInWithGitHub,
+        signUp,
+        signOut,
+        resetPassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
