@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { Layers, BookOpen, Users, ExternalLink, ChevronDown } from "lucide-react";
 
 interface NavBarProps {
   scrollSwitch?: boolean;
@@ -12,25 +13,26 @@ interface DropdownLink {
   title: string;
   href: string;
   desc: string;
+  icon?: React.ElementType;
 }
 
 const productLinks: DropdownLink[] = [
-  { title: "Features", href: "/#features", desc: "Eight protection layers for your AI agents." },
+  { title: "Features", href: "/#features", desc: "Nine protection layers for your AI agents.", icon: Layers },
   { title: "How it works", href: "/#how-it-works", desc: "Two steps, zero config." },
   { title: "Pricing", href: "/#pricing", desc: "Start free, scale when ready." },
 ];
 
 const resourceLinks: DropdownLink[] = [
-  { title: "Documentation", href: "/docs", desc: "Integration guides, API reference, deployment." },
-  { title: "Discord", href: "https://discord.gg/UTXTN5krm", desc: "Real-time community support." },
-  { title: "GitHub", href: "https://github.com", desc: "Open source. MIT licensed." },
+  { title: "Documentation", href: "/docs", desc: "Integration guides, API reference." },
+  { title: "Discord", href: "https://discord.gg/UTXTN5krm", desc: "Real-time community support.", icon: ExternalLink },
+  { title: "GitHub", href: "https://github.com", desc: "Open source. MIT licensed.", icon: ExternalLink },
 ];
 
 const companyLinks: DropdownLink[] = [
-  { title: "Contact", href: "/contact", desc: "Email us at hello@trelo.cc" },
-  { title: "Privacy", href: "/legal/privacy", desc: "How we handle your data." },
+  { title: "Contact", href: "/contact", desc: "hello@trelo.cc" },
+  { title: "Privacy", href: "/legal/privacy", desc: "How we handle data." },
   { title: "Terms", href: "/legal/terms", desc: "Rules for using Trelo." },
-  { title: "Security", href: "/legal/security", desc: "Encryption, compliance, vuln reporting." },
+  { title: "Security", href: "/legal/security", desc: "Encryption & compliance." },
 ];
 
 function NavDropdown({
@@ -50,11 +52,11 @@ function NavDropdown({
     setOpen(true);
   };
   const onLeave = () => {
-    timeoutRef.current = setTimeout(() => setOpen(false), 100);
+    timeoutRef.current = setTimeout(() => setOpen(false), 120);
   };
 
-  const baseColor = isTransparent ? "text-white" : "text-gray-700";
-  const hoverColor = isTransparent ? "hover:text-white/90" : "hover:text-gray-900";
+  const baseColor = isTransparent ? "text-white/90" : "text-gray-600";
+  const hoverColor = isTransparent ? "hover:text-white" : "hover:text-gray-900";
 
   return (
     <div className="relative" onMouseEnter={onEnter} onMouseLeave={onLeave}>
@@ -64,37 +66,37 @@ function NavDropdown({
         }`}
       >
         {label}
-        <motion.svg
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          className={`w-2.5 h-2.5 ${isTransparent ? "text-white/50" : "text-gray-300"}`}
-          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </motion.svg>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}>
+          <ChevronDown className={`w-3 h-3 ${isTransparent ? "text-white/40" : "text-gray-300"}`} />
+        </motion.span>
       </button>
 
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 2 }}
-            transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute top-full left-1/2 -translate-x-1/2 pt-1.5"
+            initial={{ opacity: 0, y: 6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute top-full left-1/2 -translate-x-1/2 pt-2"
           >
-            <div className="bg-white rounded-lg border border-gray-100/80 shadow-[0_4px_16px_rgba(0,0,0,0.03)] py-1.5 min-w-[240px]">
+            <div className="bg-white rounded-lg border border-gray-100 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] py-2 min-w-[260px] overflow-hidden">
               {links.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className="block px-4 py-2 text-left hover:bg-gray-50 transition-colors group"
+                  className="flex items-start gap-3 px-4 py-2.5 hover:bg-gray-50/80 transition-colors group"
                 >
-                  <p className="text-[13px] font-normal text-gray-800 group-hover:text-blue-600 transition-colors">
-                    {link.title}
-                  </p>
-                  <p className="text-[11px] text-gray-400 mt-0.5 leading-snug">{link.desc}</p>
+                  {link.icon && (
+                    <link.icon className="w-4 h-4 text-gray-300 group-hover:text-blue-500 mt-0.5 flex-shrink-0 transition-colors" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-gray-800 group-hover:text-blue-600 transition-colors">
+                      {link.title}
+                    </p>
+                    <p className="text-[11px] text-gray-400 mt-0.5 leading-snug">{link.desc}</p>
+                  </div>
                 </Link>
               ))}
             </div>
@@ -111,7 +113,7 @@ export default function NavBar({ scrollSwitch = false }: NavBarProps) {
   useEffect(() => {
     if (!scrollSwitch) return;
     const onScroll = () => {
-      setSwitched(window.scrollY > window.innerHeight * 0.36);
+      setSwitched(window.scrollY > window.innerHeight * 0.3);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
@@ -119,7 +121,6 @@ export default function NavBar({ scrollSwitch = false }: NavBarProps) {
   }, [scrollSwitch]);
 
   const isTransparent = scrollSwitch && !switched;
-  const bgColor = isTransparent ? "bg-transparent" : "bg-white/90 backdrop-blur-md border-b border-gray-100/50";
 
   return (
     <div
@@ -130,8 +131,8 @@ export default function NavBar({ scrollSwitch = false }: NavBarProps) {
         <div className="bg-[#0f5bff]">
           <div className="max-w-[1400px] mx-auto flex items-center justify-center py-1.5 px-8">
             <p className="text-white text-[11px] font-light tracking-wide text-center">
-              Trelo is in BETA — one line of code to stop agent loops, duplicates, and attacks.{" "}
-              <a href="#" className="underline underline-offset-2 font-medium hover:text-white/80 transition-colors">
+              Trelo is in beta — early access members get priority onboarding and bonus credits.{" "}
+              <a href="/#waitlist" className="underline underline-offset-2 font-medium hover:text-white/80 transition-colors">
                 Join early access
               </a>
             </p>
@@ -139,32 +140,49 @@ export default function NavBar({ scrollSwitch = false }: NavBarProps) {
         </div>
       )}
 
-      <nav className={`transition-all duration-300 backdrop-blur-[2px] ${bgColor}`}>
+      <nav
+        className={`transition-all duration-400 ${
+          isTransparent
+            ? "bg-transparent"
+            : "bg-white/80 backdrop-blur-xl border-b border-gray-100/60 shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
+        }`}
+      >
         <div className="max-w-[1400px] mx-auto h-14 flex items-center justify-between px-6 md:px-8">
           <Link
             href="/"
-            className={`font-semibold text-xl tracking-tight transition-colors ${
+            className={`font-semibold text-xl tracking-tight transition-colors duration-300 ${
               isTransparent ? "text-white" : "text-trelo-text"
             }`}
           >
             Trelo
           </Link>
-          <div className="hidden md:flex items-center gap-7">
+
+          <div className="hidden md:flex items-center gap-6">
             <NavDropdown label="Product" links={productLinks} isTransparent={isTransparent} />
             <NavDropdown label="Resources" links={resourceLinks} isTransparent={isTransparent} />
             <NavDropdown label="Company" links={companyLinks} isTransparent={isTransparent} />
           </div>
 
-          <Link
-            href="/login"
-            className={`text-[13px] font-medium tracking-wide transition-colors ${
-              isTransparent
-                ? "text-white hover:text-white/80"
-                : "text-trelo-text hover:text-gray-500"
-            }`}
-          >
-            Sign in →
-          </Link>
+          <div className="flex items-center gap-3">
+            <a
+              href="/#waitlist"
+              className={`hidden sm:inline-flex text-[13px] font-medium transition-colors ${
+                isTransparent ? "text-white/80 hover:text-white" : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Join waitlist
+            </a>
+            <Link
+              href="/login"
+              className={`text-[13px] font-medium rounded-[3px] px-4 py-1.5 transition-all duration-300 ${
+                isTransparent
+                  ? "text-white bg-white/15 hover:bg-white/25"
+                  : "text-trelo-text bg-gray-100 hover:bg-gray-200"
+              }`}
+            >
+              Sign in
+            </Link>
+          </div>
         </div>
       </nav>
     </div>

@@ -17,8 +17,10 @@ See [design/taste.md](design/taste.md)
 - Sign-in and sign-up mode toggling should be animated smoothly — use motion (AnimatePresence) for transitions between the two form states rather than an instant switch. Confidence: 0.70
 
 # email
-- Use trelo.cc for all email addresses, including legal emails (not trelo.com). Confidence: 0.75
-
+See [email/taste.md](email/taste.md)
 # workflow
 - When asked for an audit or list of issues, present the list first and wait for approval before making fixes — do not fix proactively. Confidence: 0.70
 - Build complete, functional implementations — do not leave placeholder/stub/empty content. Every section should be filled out and working, ready to ship. Confidence: 0.85
+
+# react
+- Use optimistic UI updates for counters and lists — increment locally (+1) immediately on user action, then sync with server on page refresh. Confidence: 0.70

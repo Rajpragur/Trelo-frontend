@@ -1,18 +1,23 @@
 "use client";
 
 import { useState, useEffect, useRef, memo } from "react";
-import { motion, useScroll, useTransform, useSpring, useReducedMotion } from "motion/react";
+import { motion, useScroll, useTransform, useSpring, useReducedMotion, AnimatePresence } from "motion/react";
 import NavBar from "@/components/NavBar";
 import { FlickeringGrid } from "@/components/FlickeringGrid";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { DitherShader } from "@/components/ui/dither-shader";
 import { Terminal } from "@/components/ui/terminal";
+import { WaitlistCounter } from "@/components/WaitlistCounter";
+import { WaitlistSection } from "@/components/WaitlistSection";
+import { GitHubStars } from "@/components/GitHubStars";
+import { WaitlistCountProvider, useWaitlistCount } from "@/lib/waitlist-count";
 import { Check, Minus, MoveRight, PhoneCall } from "lucide-react";
+const MICHELANGELO_SRC = "/michelangelo_image.jpg";
+const SCHOOL_OF_ATHENS_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg/1280px-%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg";
 
 const slide = { duration: 0.7, ease: [0.22, 1, 0.36, 1] } as const;
 
 export default function Home() {
-  // Force scroll position to re-sync after browser-back navigation
   useEffect(() => {
     const onPageshow = () => {
       window.dispatchEvent(new Event("scroll"));
@@ -22,27 +27,25 @@ export default function Home() {
   }, []);
 
   return (
-    <main>
-      <NavBar scrollSwitch />
-      <Hero />
-      <FeaturesSection />
-      <StatsSection />
-      <HowItWorksSection />
-      <PricingSection />
-      <CTASection />
-      <FooterSection />
-    </main>
+    <WaitlistCountProvider>
+      <main>
+        <NavBar scrollSwitch />
+        <Hero />
+        <FeaturesSection />
+        <StatsSection />
+        <HowItWorksSection />
+        <WaitlistSection />
+        <PricingSection />
+        <CTASection />
+        <FooterSection />
+      </main>
+    </WaitlistCountProvider>
   );
 }
 
 /* ========================================================
    HERO
    ======================================================== */
-
-const MICHELANGELO_IMAGE =
-  "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Creaci%C3%B3n_de_Ad%C3%A1m.jpg/1280px-Creaci%C3%B3n_de_Ad%C3%A1m.jpg";
-const SCHOOL_OF_ATHENS_IMAGE =
-  "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg/1280px-%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg";
 
 function Hero() {
   const ref = useRef<HTMLElement>(null);
@@ -95,32 +98,29 @@ function Hero() {
           style={reduce ? {} : { opacity: contentOpacity, willChange: "opacity" }}
           className="relative z-10 h-full pointer-events-none"
         >
-          <div className="absolute top-30 right-6 md:right-16 text-right max-w-sm">
-            <motion.p
-              initial={reduce ? {} : { opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
-              className="text-white font-medium text-base md:text-lg leading-relaxed"
-              style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
-            >
-              Stop infinite loops, prevent attacks, and cut token waste by 40-70%. One
-              line of code.
-            </motion.p>
-          </div>
-
-          <div className="absolute bottom-16 md:bottom-24 left-6 md:left-16 max-w-2xl">
+          <div className="absolute bottom-12 md:bottom-24 left-4 right-4 md:left-16 md:right-auto max-w-2xl">
             <motion.h1
               initial={reduce ? {} : { opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
-              className="text-[3rem] md:text-6xl lg:text-[5rem] font-light tracking-[-0.03em] leading-[1.02] text-white mb-10"
+              className="text-[2.2rem] xs:text-[2.8rem] sm:text-[3.5rem] md:text-6xl lg:text-[5rem] font-light tracking-[-0.03em] leading-[1.05] text-white mb-6"
               style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
             >
               Trust middleware
               <br />
               for <span className="text-blue-600">AI agents</span>
             </motion.h1>
-            <HeroHoverButton />
+            <motion.p
+              initial={reduce ? {} : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.35 }}
+              className="text-white/90 text-sm md:text-base font-light mb-7 max-w-md leading-relaxed"
+              style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
+            >
+              The runtime safety layer that stops agent loops, blocks attacks,
+              and slashes your API bill — all in one line of code.
+            </motion.p>
+            <HeroWaitlistCapture reduce={reduce} />
           </div>
         </motion.div>
       </div>
@@ -141,10 +141,10 @@ const HeroBackground = memo(function HeroBackground({
   useEffect(() => {
     const img = new Image();
     img.onload = () => {
-      setBgImage(`url(${MICHELANGELO_IMAGE})`);
+      setBgImage(`url(${MICHELANGELO_SRC})`);
       setLoaded(true);
     };
-    img.src = MICHELANGELO_IMAGE;
+    img.src = MICHELANGELO_SRC;
     return () => {
       img.onload = null;
     };
@@ -164,55 +164,191 @@ const HeroBackground = memo(function HeroBackground({
   );
 });
 
-function HeroHoverButton() {
-  const [hovered, setHovered] = useState(false);
+function HeroWaitlistCapture({ reduce }: { reduce: boolean | null }) {
+  const { increment } = useWaitlistCount();
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"form" | "code" | "done" | "duplicate">("form");
+  const [submitting, setSubmitting] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("");
+
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const codeValid = /^\d{6}$/.test(code);
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailValid || submitting) return;
+    setSubmitting(true);
+    setStatusMsg("");
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), name: email.trim().split("@")[0] }),
+      });
+      const data = await res.json();
+      if (res.status === 409 || data.error === "duplicate") {
+        setStep("duplicate");
+        return;
+      }
+      if (!res.ok) throw new Error(data.message);
+      setStep("code");
+    } catch {
+      setStatusMsg("Something went wrong. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!codeValid || submitting) return;
+    setSubmitting(true);
+    setStatusMsg("");
+    try {
+      const res = await fetch("/api/waitlist/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), code }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setStatusMsg(data.message ?? "Wrong code. Try again.");
+        return;
+      }
+      increment();
+      setStep("done");
+    } catch {
+      setStatusMsg("Something went wrong. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    setStatusMsg("Sending a new code...");
+    try {
+      await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), name: email.trim().split("@")[0] }),
+      });
+      setStatusMsg("New code sent! Check your inbox.");
+    } catch {
+      setStatusMsg("Could not send. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <div
-      className="pointer-events-auto relative inline-block"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <motion.div
-        className="absolute inset-0 rounded-[3px] border-2 border-white pointer-events-none"
-        animate={hovered ? { x: 12, y: -12, opacity: 0.4 } : { x: 0, y: 0, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 100, damping: 15 }}
-      />
-      <motion.div
-        className="absolute inset-0 rounded-[3px] border border-white pointer-events-none"
-        animate={hovered ? { x: 20, y: -20, opacity: 0.3 } : { x: 0, y: 0, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 70, damping: 12 }}
-      />
-      <motion.a
-        href="/login"
-        animate={hovered ? { x: 8, y: -8 } : { x: 0, y: 0 }}
-        transition={{ type: "spring", stiffness: 100, damping: 15 }}
-        className="relative inline-flex flex-col justify-between pl-10 pr-4 md:pl-18 py-2 text-white text-sm font-semibold bg-[#0f5bff] rounded-[3px] tracking-wide gap-6"
-        style={{
-          fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif",
-        }}
-      >
+    <div className="pointer-events-auto">
+      {step === "done" ? (
         <motion.div
-          className="flex justify-end"
-          animate={hovered ? { scale: 1.25, rotate: 6 } : { scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 200, damping: 12 }}
+          initial={reduce ? {} : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 text-white/80"
+          style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="white"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M7 17L17 7M17 7H7M17 7V17"
-            />
+          <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
+          <span className="text-sm font-light">You&apos;re on the waitlist! We&apos;ll be in touch.</span>
         </motion.div>
-        <span className="text-right">Get started</span>
-      </motion.a>
+      ) : step === "duplicate" ? (
+        <motion.div
+          initial={reduce ? {} : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-white/80"
+          style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
+        >
+          <span className="text-sm font-light">You&apos;re already on the list!</span>
+        </motion.div>
+      ) : step === "code" ? (
+        <div>
+          <p className="text-white/50 text-xs font-light mb-3" style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}>
+            We sent a 6-digit code to <span className="text-white/70">{email}</span>
+          </p>
+          <form onSubmit={handleVerifyCode} className="flex flex-col gap-2.5 w-full sm:w-auto sm:flex-row sm:items-start">
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              value={code}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                setCode(v);
+              }}
+              placeholder="000000"
+              disabled={submitting}
+              className="w-full sm:w-36 px-4 py-2.5 text-sm text-center tracking-[0.3em] bg-black/40 backdrop-blur-sm border border-white/30 rounded-[3px] text-white placeholder-white/40 outline-none focus:border-white/60 focus:bg-black/50 transition-colors disabled:opacity-50"
+              style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
+            />
+            <button
+              type="submit"
+              disabled={!codeValid || submitting}
+              className="px-5 py-2.5 bg-[#0f5bff] hover:bg-blue-600 text-white text-sm font-medium rounded-[3px] transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+              style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
+            >
+              {submitting ? (
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                "Verify"
+              )}
+            </button>
+          </form>
+          <div className="flex items-center gap-3 mt-3">
+            {statusMsg && (
+              <p className="text-xs text-white/50 font-light" style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}>
+                {statusMsg}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={submitting}
+              className="text-xs text-white/40 hover:text-white/60 transition-colors font-light"
+              style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
+            >
+              Resend code
+            </button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleEmailSubmit} className="flex flex-col gap-2.5 w-full sm:w-auto sm:flex-row sm:items-start">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+            disabled={submitting}
+            className="w-full sm:w-56 px-4 py-2.5 text-sm bg-black/40 backdrop-blur-sm border border-white/30 rounded-[3px] text-white placeholder-white/50 outline-none focus:border-white/60 focus:bg-black/50 transition-colors disabled:opacity-50"
+            style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
+          />
+          <button
+            type="submit"
+            disabled={!emailValid || submitting}
+            className="px-5 py-2.5 bg-[#0f5bff] hover:bg-blue-600 text-white text-sm font-medium rounded-[3px] transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+            style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}
+          >
+            {submitting ? (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              "Join the waitlist"
+            )}
+          </button>
+        </form>
+      )}
+      {statusMsg && step === "form" && (
+        <p className="text-xs text-white/50 font-light mt-2" style={{ fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif" }}>
+          {statusMsg}
+        </p>
+      )}
+      <div className="mt-4">
+        <WaitlistCounter />
+      </div>
     </div>
   );
 }
@@ -221,15 +357,61 @@ function HeroHoverButton() {
    FEATURES
    ======================================================== */
 
-const FEATURE_CARDS = [
-  { label: "L1", title: "Infinite Loops", desc: "Agents hammer the same broken tool call hundreds of times while you watch the meter run." },
-  { label: "L2", title: "Prompt Injection", desc: "Malicious user input tricks your agent into deleting data or calling unauthorized APIs." },
-  { label: "L3", title: "Runaway Spend", desc: "You discover the $4,000 API bill on Monday morning with zero idea which agent caused it." },
-  { label: "L4", title: "Duplicate Actions", desc: "The same agent charges a customer twice because it lost track of what it just did." },
-  { label: "L5", title: "No Side effects safety", desc: "Emails send twice. Orders place twice. Database writes happen twice. Every retry is a disaster." },
-  { label: "L6", title: "Black Box Audits", desc: "An agent makes a bad decision at 3 AM and you have zero logs to explain why." },
-  { label: "L7", title: "Silent Failures", desc: "The agent stops responding mid-task. No error. No timeout. Just silence and a stuck customer." },
-  { label: "L8", title: "Retry Storms", desc: "One failing API triggers a cascade of retries that burns your monthly budget in 20 minutes." },
+const FEATURE_LAYERS = [
+  {
+    layer: "L1",
+    title: "Circuit Breaker",
+    short: "Stops runaway agent loops before they burn your budget.",
+    detail: "Detects when your agent is stuck retrying the same failing operation and automatically intervenes. Three failures in 60 seconds triggers an automatic recovery process that saves 90% on failure costs.",
+  },
+  {
+    layer: "L2",
+    title: "Deduplication",
+    short: "Catches duplicate actions — even when rephrased. Never charge a customer twice.",
+    detail: "Understands intent, not just keywords. Two different prompts that mean the same thing get caught before execution. Prevents double refunds, duplicate emails, and accidental repeat purchases.",
+  },
+  {
+    layer: "L3",
+    title: "Prompt Firewall",
+    short: "Blocks injection attacks, internal URLs, and secret leaks before they reach your model.",
+    detail: "Screens every prompt for injection patterns, private IPs, and credential leaks. 150+ signature database that updates continuously. Catches what your model can't see.",
+  },
+  {
+    layer: "L4",
+    title: "Cost Policies",
+    short: "Set per-agent budgets. Get alerts before things spiral out of control.",
+    detail: "Define spending thresholds per agent, per day. Automatic model downgrades at 80% budget, hard pause at the limit. Never wake up to a surprise API bill again.",
+  },
+  {
+    layer: "L5",
+    title: "Audit Trail",
+    short: "Every tool call, every decision — logged and searchable. Compliance-ready.",
+    detail: "Full decision trail in structured format. Know exactly what your agent did, when, and why. Drift detection flags behavioral shifts before they become problems.",
+  },
+  {
+    layer: "L6",
+    title: "Retry Intelligence",
+    short: "Smart backoff that cuts failure costs by 90% instead of hammering the same error.",
+    detail: "Analyzes failure patterns and recovers with context, not brute force. Escalates to smarter models only when needed. One recovery attempt instead of 47 retries.",
+  },
+  {
+    layer: "L7",
+    title: "Side-effect Safety",
+    short: "Guarantees payments process once. Emails send once. No double-writes. Ever.",
+    detail: "Tracks every external action through a safe state machine. A dispatched payment cannot be re-dispatched. A confirmed email cannot be sent again. Deterministic guarantees, not best-effort.",
+  },
+  {
+    layer: "L8",
+    title: "Model Routing",
+    short: "Auto-failover between models when quality degrades or costs spike.",
+    detail: "Routes requests to the right model for the right task. Falls back automatically when models degrade. Uses cheap models for routine work, smart models for recovery — saving 90% on operational costs.",
+  },
+  {
+    layer: "L9",
+    title: "Silence Detection",
+    short: "Heartbeat monitoring. No more agents going dark without anyone noticing.",
+    detail: "Monitors agent responsiveness and detects stalls. Alerts you when an agent has stopped making progress — before your users notice. Triggers automatic recovery or human escalation.",
+  },
 ] as const;
 
 function FeaturesSection() {
@@ -290,7 +472,7 @@ function FeaturesSection() {
             }}
           >
             <h2 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-[5rem] font-light text-trelo-text tracking-[-0.03em] leading-[1.05]">
-              Eight problems.
+              Nine layers.
               <br />
               <span className="text-blue-600">One proxy.</span>
             </h2>
@@ -298,11 +480,11 @@ function FeaturesSection() {
 
           <div
             ref={gridRef}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 max-w-[920px] mx-auto"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-[1000px] mx-auto"
           >
-            {FEATURE_CARDS.map((card, i) => (
+            {FEATURE_LAYERS.map((card, i) => (
               <FeatureCardItem
-                key={card.label}
+                key={card.layer}
                 card={card}
                 index={i}
                 scrollYProgress={scrollYProgress}
@@ -328,7 +510,7 @@ const FeatureCardItem = memo(function FeatureCardItem({
   offsetTx,
   offsetTy,
 }: {
-  card: (typeof FEATURE_CARDS)[number];
+  card: (typeof FEATURE_LAYERS)[number];
   index: number;
   scrollYProgress: any;
   reduce: boolean | null;
@@ -336,7 +518,7 @@ const FeatureCardItem = memo(function FeatureCardItem({
   offsetTx: number;
   offsetTy: number;
 }) {
-  const start = 0.2 + index * 0.02;
+  const start = 0.2 + index * 0.025;
   const end = start + 0.1;
 
   const tx = useTransform(
@@ -368,49 +550,58 @@ const FeatureCardItem = memo(function FeatureCardItem({
             }
       }
     >
-      <HoverableCard card={card} />
+      <ExpandableCard card={card} />
     </motion.div>
   );
 });
 
-const HoverableCard = memo(function HoverableCard({
+const ExpandableCard = memo(function ExpandableCard({
   card,
 }: {
-  card: (typeof FEATURE_CARDS)[number];
+  card: (typeof FEATURE_LAYERS)[number];
 }) {
-  const [hovered, setHovered] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onClick={() => setExpanded(!expanded)}
+      className="flex flex-col bg-white rounded-xl border border-gray-100 p-5 cursor-pointer transition-shadow hover:shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]"
     >
-      <motion.div
-        animate={hovered ? { y: -6 } : { y: 0 }}
-        transition={{ type: "spring", stiffness: 200, damping: 18 }}
-        className="flex flex-col items-center text-center bg-white rounded-xl border border-gray-100 p-5 cursor-default"
-        style={{
-          boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
-          willChange: "transform",
-        }}
-      >
-        <h3
-          className="text-sm font-semibold text-trelo-text mb-1.5"
-          style={{
-            fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif",
-          }}
-        >
-          {card.title}
-        </h3>
-        <p
-          className="text-xs text-gray-400 leading-relaxed"
-          style={{
-            fontFamily: "'BDO Grotesk', var(--font-geist-sans), sans-serif",
-          }}
-        >
-          {card.desc}
-        </p>
-      </motion.div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-semibold text-gray-300 tracking-wider">
+          {card.layer}
+        </span>
+        <AnimatePresence initial={false}>
+          {expanded && (
+            <motion.span
+              initial={{ opacity: 0, rotate: -90 }}
+              animate={{ opacity: 1, rotate: 0 }}
+              exit={{ opacity: 0, rotate: 90 }}
+              transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="text-[10px] text-blue-600 font-medium"
+            >
+              Hide
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </div>
+      <h3 className="text-sm font-semibold text-trelo-text mb-1.5">
+        {card.title}
+      </h3>
+      <p className="text-xs text-gray-400 leading-relaxed">{card.short}</p>
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.p
+            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+            animate={{ opacity: 1, height: "auto", marginTop: 12 }}
+            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="text-xs text-gray-500 leading-relaxed pt-3 border-t border-gray-100"
+          >
+            {card.detail}
+          </motion.p>
+        )}
+      </AnimatePresence>
     </div>
   );
 });
@@ -989,11 +1180,10 @@ function CTASection() {
           className="flex flex-col sm:flex-row items-center justify-center gap-3"
         >
           <a
-            href="https://github.com/trelo"
-            target="_blank"
+            href="#waitlist"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-[3px] bg-blue-600 hover:bg-blue-500 text-white text-sm font-normal transition-colors"
           >
-            Star on GitHub
+            Join the waitlist
           </a>
           <a
             href="#pricing"
@@ -1001,6 +1191,15 @@ function CTASection() {
           >
             View pricing
           </a>
+        </motion.div>
+        <motion.div
+          initial={reduce ? {} : { opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-20px" }}
+          transition={{ ...slide, delay: 0.24 }}
+          className="mt-5"
+        >
+          <GitHubStars />
         </motion.div>
       </div>
     </section>

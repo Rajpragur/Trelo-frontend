@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { useAuth } from "@/lib/auth";
+import { WaitlistGate } from "@/components/WaitlistGate";
 import {
   Bot, Workflow, BookOpen, Wrench, Activity, BarChart3,
   Users, Key, CreditCard, Search, Bell, LogOut, Terminal, X, Settings,
@@ -278,8 +279,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </header>
 
-        <main className="p-6 md:p-8 max-w-[1200px] w-full">
-          {children}
+        <main className="p-6 md:p-8 max-w-[1200px] w-full flex-1">
+          <WaitlistGate email={user.email!}>{children}</WaitlistGate>
         </main>
       </div>
     </div>

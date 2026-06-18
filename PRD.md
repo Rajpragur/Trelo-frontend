@@ -1,379 +1,252 @@
 ---
 title: "Trelo — Trust Middleware for AI Agents"
 author: "Raj Pratap Singh Gurjar"
-date: "May 2026"
+date: "June 2026"
 geometry: margin=1in
 ---
 
-# Product Requirements Document v1.0
+# Product Requirements Document v2.2
+
+## 0. Document Control
+
+| Detail | Value |
+|--------|-------|
+| **Version** | v2.2 |
+| **Author** | Raj Pratap Singh Gurjar |
+| **Date** | June 18, 2026 |
+| **Status** | Draft |
+| **Phase 1 Scope** | Landing page with waitlist, demo embed, GitHub stars counter |
+
+---
 
 ## 1. Executive Summary
 
-Trelo is a deterministic runtime safety and security layer that sits between AI agent frameworks (LangChain, CrewAI, OpenAI SDK, AutoGen) and the external world (tools, APIs, databases, payments). It combines nine layers of protection — circuit breaking, semantic deduplication, trajectory recovery, agent firewall, model-aware routing, idempotency, audit logging, deterministic testing, and hallucination guard — plus a shared tool library for token efficiency — into a single `pip install` proxy.
+Trelo is a runtime safety layer that sits between AI agent frameworks and the external world. It combines circuit breaking, semantic dedup, trajectory recovery, agent firewall, model-aware routing, idempotency, audit logging, deterministic testing, and hallucination guard into a single `pip install` proxy.
 
 **Tagline:** Trust Middleware for AI Agents.
 
-**Mental Model for VCs:** Cloudflare + Vanta for AI agents.
+**Pricing:** Open-source core, \$29/mo Pro, \$299/mo Team, Custom Enterprise.
 
-**Target Price:** Open-source core, $29/mo Pro, $299/mo Team, Custom Enterprise.
-
----
-
-## 2. Market Research — What YC Is Funding
-
-### 2.1 YC Summer 2026 Requests for Startups
-
-Y Combinator's Summer 2026 RFS explicitly signals that agent infrastructure is a priority. Key relevant themes:
-
-- **AI Companies That Replace Services, Not Improve Them:** YC partner Gustaf Alstromer specifically wants startups that sell the outcome, not the tool. Insurance brokerage, accounting, compliance, healthcare administration. Every one of these requires agents that execute reliably — which is exactly what Trelo enables.
-
-- **Company Brain:** Tom Blomfield wants a system that extracts, structures, and maintains institutional knowledge so AI agents can execute reliably. Trelo's trajectory recovery layer (LLM Wiki pattern) directly enables this — it builds a living knowledge base of successful recovery patterns.
-
-- **Service Replacement Thesis:** "The total spend on services is many times larger than the spend on software." YC believes the next wave of generational companies will be AI-native services. Trelo is the infrastructure layer that makes those services safe enough to deploy.
-
-### 2.2 YC Batch Data (W26, S25, P26)
-
-- 80-85% of YC S25 startups are B2B/enterprise-focused
-- ~60% of YC 2026 batches are AI companies (up from 40% in 2024)
-- Nearly 50% of recent YC batches are AI agent companies
-- 80% of enterprises expected to implement AI agents by end of 2026
-
-### 2.3 Related YC Companies Worth Watching
-
-| Company | What They Build | YC Batch | Relevance to Trelo |
-|---------|----------------|----------|-------------------|
-| Chronicle Labs | Staging environment for enterprise AI agents (replay production traces) | P26 | Adjacent — they test agents before deploy; Trelo protects agents during runtime |
-| Agentic Fabriq | Identity and governance layer for AI agents ("Okta for Agents") | P26 | Adjacent — identity/access is a different layer than Trelo's safety/execution layer |
-| GodHands | Deterministic computer use layer for reliable browser/desktop ops | F26 | Complementary — they handle deterministic execution; Trelo handles safety around it |
-| Hessian | Platform for automating business operations with AI agents | P26 | Potential customer — they need Trelo's safety guarantees |
-| Prox | Ticket resolution agents for logistics companies | F26 | Potential customer — they need circuit breakers + cost optimization |
-
-### 2.4 Competitor Landscape
-
-| Competitor | What They Do | Trelo's Advantage |
-|------------|-------------|------------------|
-| Langfuse / Helicone | LLM observability, tracing, cost dashboards | Passive (show fire after it burns). Trelo is active — stops issues before they happen. |
-| Guardrails AI | Output validation (PII, format, structure) | Shallow syntax validation. Trelo validates intent, not just format. |
-| Mem0 / Letta | Agent memory & statefulness | Memory only. No execution boundaries or duplicate blocking. |
-| Noma Security (YC, $132M) | Agentic AI security platform | CISO-focused, heavy platform. Trelo is lightweight middleware for developers. |
-| Sycamore ($65M) | Enterprise agent orchestration | Too broad. Trelo is a thin trust layer that plugs into any orchestration. |
-| Vijil ($23M) | Agent reliability & security testing | Pre-deployment only. Trelo provides continuous runtime enforcement. |
-| AuraGuard (OSS) | Circuit breaker + exactly-once for tool calls | Narrow scope. No semantic intent, trajectory recovery, or model-aware routing. |
-| Capsule Security ($7M) | Agent behavior monitoring & security | Monitoring only. Trelo actively blocks, recovers, and routes. |
-| Galileo / Arize AI | Hallucination monitoring & scoring on LLM outputs | Post-hoc scoring only. Trelo detects hallucination *during* execution via canary tokens and auto-triggers recovery. |
-
-### 2.5 Market Size
-
-- AI Agents Market: $7.63B (2025) → $182.97B (2033), CAGR 49.6%
-- Agentic AI Security Market: $1.65B (2026) → $13.52B (2032), CAGR 42%
-- 96% of enterprises report AI costs higher than expected
-- 40%+ of agentic AI projects will be cancelled by 2027 (Gartner)
-- 74% of orgs lack a real AI agent governance strategy
-
-**Key Insight:** There is no single competitor that offers all of circuit breaking + semantic deduplication + trajectory recovery + model-aware routing + agent firewall + hallucination guard + audit trail in one thin middleware. This is Trelo's wedge.
+**Current phase:** Landing page with waitlist to validate demand before building the full proxy.
 
 ---
 
-## 3. Problem Statement
-
-### 3.1 The Pain
-
-Every team deploying AI agents independently discovers the same hard truths:
-
-1. **Infinite Loops:** Agents retry failing tools endlessly, burning API budgets overnight. A standard agent retrying auth 47 times burns $0.42+ on nothing.
-
-2. **Duplicate Actions:** An agent asked to "refund order 123" might also "issue $50 back to the customer" — same intent, different phrasing. Double charge. Double email. Angry customer.
-
-3. **Runaway Costs:** Cheap models (GPT-4o-mini) fail more often on complex tool calls. Smart models (GPT-4o) cost 20x more. Teams guess which to use and overpay either way.
-
-4. **Security Vulnerabilities:** Agents hallucinate and call internal IPs (169.254.169.254 — AWS metadata), leak PII to external APIs, or follow prompt injection instructions.
-
-5. **No Recovery From Failure:** When an agent gets stuck, it either retries forever or gives up. No mechanism to learn from past failures and auto-recover.
-
-6. **Zero Audit Trail:** When something goes wrong at 3 AM, there's no record of what the agent did, why it did it, or how to reproduce the issue.
-
-7. **Hallucinations in Long-Running Sessions:** With every turn, context windows fill up. After ~20-30 tool calls, agents start conflating details, inventing facts, or ignoring instructions — a known failure mode with no runtime guard.
-
-8. **Token Waste on Tool Repetition:** Every new session or agent re-defines tool schemas from scratch, burning hundreds of context tokens on descriptions the proxy already knows.
-
-### 3.2 The Hallucination Problem in Detail
-
-When an agent's context window is overstuffed — long conversations, large documents, many tool results — LLMs hallucinate. They conflate details, invent facts, or drop instructions. This is a well-documented failure mode (Lost-in-the-Middle, Attention Sinks), but **nobody has a runtime guard for it yet.**
-
-Trelo's canary token technique solves this:
-1. Injects a tiny, unique, meaningless token (e.g. `CANARY::a7f3b2`) into the system prompt at session start
-2. If the agent's response ever contains the canary string → the model is regurgitating internal markers → hallucination risk
-3. Periodically tests: ask the agent to recall its canaries. If early ones are missing → context is overstuffed → triggers auto-summarization or truncation
-4. Multiple canaries at different context depths estimate how much of the window is actually attended to
-
-This is a novel, defensible feature. No competitor in the agent infra space is doing runtime hallucination detection via canary tokens.
-
-### 3.3 Market Validation
-
-- 79% of enterprises have deployed AI agents (IDC/DataRobot)
-- Only 23% are scaling to production — infrastructure bottlenecks prevent it
-- 94% of developers would switch vendors for better agent infrastructure (Nylas)
-- Every YC agent company we interviewed independently discovered they need circuit breakers, deduplication, and guardrails
-
----
-
-## 4. Product Architecture
-
-### 4.1 Trelo Proxy — System Design
+## 2. Product Architecture — The 9 Layers
 
 ```
 Agent Framework (LangChain, CrewAI, OpenAI SDK, AutoGen, etc.)
-     |
-     v
-+---------------------------------------------------------------+
-|                    TRELO PROXY LAYER                          |
-+---------------------------------------------------------------+
-| L1: LLM Call Interceptor -- intercepts every LLM-to-tool call|
-|     - MD5 hash of (tool_name + canonical_args)               |
-|     - Jaccard similarity on stringified arguments            |
-|     - Detects duplicate intent across rephrased requests     |
-|     - Decision: ALLOW / BLOCK / QUEUE                        |
-+---------------------------------------------------------------+
-| L2: Circuit Breaker -- state machine for tool health          |
-|     States: CLOSED -> OPEN_RECOVERY -> HALF_OPEN -> CLOSED   |
-|     3 failures/60s -> escalate to stronger model             |
-|     Strong model fixes -> probe with cheap -> circuit resets |
-|     All fails -> HARD OPEN -> human notified                 |
-+---------------------------------------------------------------+
-| L3: Trajectory Recovery -- LLM Wiki pattern                   |
-|     raw/traces/ -> LLM compiles -> wiki/trajectories/        |
-|     Stagnation detected -> read relevant wiki -> inject hint |
-|     KB of successful recovery patterns maintained by LLM     |
-+---------------------------------------------------------------+
-| L4: Side-Effect Safety -- Idempotency enforcement             |
-|     PENDING -> DISPATCHED -> CONFIRMED/FAILED state machine  |
-|     Deterministic request_id = hash(run_id + tool + args)    |
-|     Never retry from DISPATCHED -- check or fail safe        |
-+---------------------------------------------------------------+
-| L5: Agent Firewall                                            |
-|     - SSRF prevention: block 169.254.x.x, private IPs        |
-|     - PII/secret redaction: regex + ML pattern detection     |
-|     - Prompt injection detection: 150+ signature catalog     |
-|     - Privilege control: URL allowlists + R/W/D permissions  |
-|     - Package typosquatting detection                        |
-+---------------------------------------------------------------+
-| L6: Dynamic Cost & Policy Enforcement                         |
-|     80% budget -> auto-downgrade model at next task bound    |
-|     95% budget -> pause new tasks, notify human              |
-|     100% budget -> hard stop (never mid-execution)           |
-+---------------------------------------------------------------+
-| L7: Audit & Compliance Trail                                  |
-|     JSONL: every decision logged with timestamp + agent_id   |
-|     SOC2/ISO compliance reports from local data              |
-|     Drift detection: compare current to historical baseline  |
-+---------------------------------------------------------------+
-| L8: Deterministic Testing Environment                         |
-|     Replay exact execution traces from L7 audit logs          |
-|     A/B test: same task, different circuit breaker configs   |
-|     Inject simulated failures (503s, timeouts, malformed)    |
-|     CI/CD integration for agent reliability testing          |
-+---------------------------------------------------------------+
-| L9: Hallucination Guard — Canary Token Detection              |
-|     Injects unique canary tokens at context boundaries        |
-|     Detects canary leaks in agent output (hallucination flag) |
-|     Periodic canary survival check → context overstuff detect |
-|     Auto-triggers truncation/summarization when integrity low |
-+---------------------------------------------------------------+
-| Tool Library — Shared, Pre-Warmed Tool Definitions            |
-|     Agents reference tools by name, not full schema blobs     |
-|     Memory stays isolated per-session; tools are shared       |
-|     Saves ~500+ tokens per tool reference per session start   |
-|     Reduces startup latency and token waste                   |
-+---------------------------------------------------------------+
-     |
-     v
-Tools, APIs, Databases, Payments, External Services
+  |
+  v
++-- TRELO PROXY ---------------------------------------------------+
+|                                                                   |
+| L1: LLM Call Interceptor   — MD5 hash + Jaccard on args          |
+| L2: Circuit Breaker        — CLOSED -> OPEN -> HALF_OPEN states   |
+| L3: Trajectory Recovery    — LLM Wiki of recovery patterns        |
+| L4: Side-Effect Safety     — PENDING/DISPATCHED/CONFIRMED states  |
+| L5: Agent Firewall         — SSRF, PII, prompt injection blocking |
+| L6: Cost Enforcement       — 80/95/100% budget thresholds         |
+| L7: Audit & Compliance     — JSONL trail, drift detection         |
+| L8: Deterministic Testing  — Replay traces in CI/CD              |
+| L9: Hallucination Guard    — Canary tokens in context             |
+| + Tool Library             — Shared tool schemas, saves ~500t/tool|
++-------------------------------------------------------------------+
+  |
+  v
+Tools, APIs, Databases, External Services
 ```
 
-### 4.2 The Secret Weapon: Model-Aware Circuit Breaking
+### Layer Details (Implementation Notes)
 
-The core technical insight that makes Trelo novel:
+| Layer | Problem It Solves | Key Implementation Detail | Cost Impact |
+|-------|------------------|--------------------------|-------------|
+| L1: Call Interceptor | Duplicate intents cost double | MD5 hash (tool_name + canonical_args) + Jaccard > 0.9 = BLOCK | Prevents double charges |
+| L2: Circuit Breaker | Infinite retry loops burn \$500 overnight | 3 failures/60s -> escalate cheap→smart model -> probe -> reset. All fail -> HARD OPEN -> human notified | 90% reduction on failure costs |
+| L3: Trajectory Recovery | Agent gets stuck same way every time | raw/traces/ -> LLM compiles -> wiki/trajectories/. Stagnation triggers wiki read -> hint injection | Faster recovery, less token waste |
+| L4: Idempotency | Retrying already-dispatched actions | request_id = hash(run_id + tool + args). Never retry from DISPATCHED state | Prevents duplicate payments/emails |
+| L5: Agent Firewall | Agent calls internal IPs, leaks secrets | Block 169.254.x.x, 10.x.x.x, 172.16-31.x.x, 192.168.x.x. Regex for API keys/emails/credit cards. 150+ injection signatures | Security — priceless |
+| L6: Cost Enforcement | Agents burn through budgets silently | 80% -> auto-downgrade model. 95% -> pause new tasks. 100% -> hard stop (never mid-execution) | Predictable costs |
+| L7: Audit Trail | No record when things break at 3 AM | JSONL with timestamp + agent_id per decision. SOC2-ready format. Drift detection vs historical baseline | Compliance requirement |
+| L8: Deterministic Testing | Can't reproduce agent failures | Replay exact traces from L7. A/B test configs. Inject 503s/timeouts. CI/CD integration | Confidence to deploy |
+| L9: Hallucination Guard | Agent hallucinates after 30+ tool calls | Inject canary tokens at context boundaries. Check survival rate periodically. Auto-trigger summarization when integrity drops | Prevents quiet failures |
+| Tool Library | Every new session re-defines tool schemas | Agents reference tools by name. Shared schema cache. ~500 tokens saved per tool per session start | 10-20% token savings |
 
-| Model State | Model Used | Behavior |
-|-------------|-----------|----------|
-| CLOSED | Cheap (GPT-4o-mini, ~$0.15/M) | Normal operation |
-| OPEN recovery | Smart (GPT-4o/Claude Sonnet, ~$3/M) | Recovery attempt with full failure context |
-| Recovery success | HALF_OPEN with cheap model | Probe tool; if OK -> CLOSED |
+### Model-Aware Circuit Breaking (Secret Weapon)
+
+| State | Model Used | Behavior |
+|-------|-----------|----------|
+| CLOSED | Cheap (GPT-4o-mini) | Normal operation |
+| OPEN recovery | Smart (GPT-4o/Claude Sonnet) | Recovery with full failure context |
+| Recovery success | HALF_OPEN with cheap | Probe tool; if OK -> CLOSED |
 | Recovery failure | HARD OPEN | Tool broken; human notified |
-| HALF_OPEN success | CLOSED with cheap model | Normal operation resumes |
-| HALF_OPEN failure | OPEN recovery with smart model | Try smart model again |
+| HALF_OPEN success | CLOSED with cheap | Normal operation resumes |
+| HALF_OPEN failure | OPEN with smart | Try smart again |
 
-**Cost Impact:** A loop without Trelo burns $0.42+ (47 retries at cheap model). With Trelo: 3 cheap failures ($0.02) + 1 smart recovery ($0.03) = $0.05. Task completed. 90% cost reduction on failure scenarios.
-
----
-
-## 5. V1 Build Plan (14 Days)
-
-Week | What to Build | Reference | LOC
------|--------------|-----------|-----
-Days 1-3 | L2: Circuit Breaker (CLOSED→OPEN state machine) | AuraGuard CLI pattern | ~150
-Days 4-5 | L1: Semantic Dedup (MD5 hash + Jaccard on args) | AutomatosAI pattern | ~100
-Days 6-8 | L5: SSRF + PII (regex URL filter + PII patterns) | Puffer/ZugaShield patterns | ~200
-Days 9-11 | L4: Side-Effect Safety (receipt store) | SafeAgent pattern | ~150
-Days 12-13 | L3: Basic Trajectory Store (SQLite + embedding similarity) | LLM Wiki pattern (simplified) | ~200
-Day 14 | L7: Audit Trail (JSONL logging) + Demo Video | Zero-dependency file logger | ~50
-
-**Tech Stack:** Python, FastAPI, SQLite, sentence-transformers (all-MiniLM-L6-v2), OpenRouter API for model routing.
-
-**Total:** ~1,000 lines of Python. Buildable in 14 days by one person using v4 pro via command code.
+**Cost math:** 47 retries without Trelo = \$0.42. With Trelo: 3 cheap failures (\$0.02) + 1 smart recovery (\$0.03) = \$0.05. **90% less.**
 
 ---
 
-## 6. User Experience Flow
+## 3. Phase 1 — Landing Page Build
 
-### 6.1 Developer Onboarding
+### 3.1 Why Landing Page First
 
-```bash
-# Install
-pip install trelo
+Validate demand before investing 2-3 weeks in proxy code. Capture waitlist emails (signal for YC/investors). Show demo video to communicate value. Display GitHub stars as social proof. Build SEO presence early.
 
-# Run the proxy
-trelo serve --port 8000
+### 3.2 Landing Page Sections
 
-# Point your agent to it
-agent = Agent(base_url="http://localhost:8000/v1")
-# That's it. 9 layers of protection active.
+| Section | Key Elements |
+|---------|-------------|
+| **Hero** | Headline: "Trust Middleware for AI Agents". Subheadline: "Stop infinite loops, block duplicate payments, prevent SSRF attacks, slash token waste by 40-70%. `pip install trelo`". Primary CTA: "Join the Waitlist". Secondary: "View on GitHub" with star badge. GitHub stars via shields.io or direct API polled every 60s. Loading state: skeleton shimmer. Error: "Star on GitHub" fallback text. Empty: "0 stars" |
+| **Problem/Solution** | Split screen. Left (pain): "Agent retried broken tool 47 times — \$0.94 for nothing", "Refunded same customer twice — different words, same intent", "Called cloud metadata endpoint — nobody noticed". Right (solution): Trelo fixes all three in one import. |
+| **Demo** | Embedded video (30-60s) showing side-by-side: Without Trelo (agent spins, costs \$0.94, FAILED) vs With Trelo (circuit breaker kicks in, costs \$0.12, COMPLETED). Loading: skeleton + play button overlay. Error: "Watch on YouTube →" fallback link. |
+| **9 Features Grid** | Cards for each layer. Icon + name + one-liner + expandable detail. Circuit Breaker: "Stops infinite retry loops. Saves 90% on failure costs." Semantic Dedup: "Detects duplicate intents even when rephrased." etc. |
+| **Waitlist Signup** | Email (required), Name (optional), Use Case dropdown (Individual Dev / Startup / Enterprise / VC / Other). Client-side validation with debounce. Success: checkmark + "You're on the list!" Error: inline message. Duplicate: "Already on the list!" Loading: spinner, fields disabled. |
+| **GitHub Section** | "We're Open Source". Big star count (48px) + GitHub link. Loading: skeleton. Error: "Can't reach GitHub. [Check repo →]" Empty: "Fresh repo — be the first?" |
+| **Footer** | GitHub, Twitter/X, Email, Docs (placeholder). "Built by Raj Pratap Singh Gurjar" |
+
+### 3.3 Technical Specs
+
+| Requirement | Detail |
+|-------------|--------|
+| Stack | Static HTML/CSS/JS or HTML + Tailwind CDN |
+| Hosting | GitHub Pages, Vercel, or Netlify (free tiers) |
+| Domain | trelo.dev or trelo.ai (check availability) |
+| Waitlist backend | Formspree (50/mo free) or Web3Forms or Vercel serverless fn |
+| GitHub stars | Client-side fetch from api.github.com. Use token for 5000/hr rate limit. Cache in localStorage (5 min TTL). |
+| SEO | og:title, og:description, og:image (1200x630), twitter:card, sitemap.xml, robots.txt |
+| Performance | Lighthouse 90+ all categories |
+| Responsive | 320px, 768px, 1024px, 1440px breakpoints |
+| Theme | Dark default, no toggle |
+
+### 3.4 Build Schedule (5 Days)
+
+| Day | What |
+|-----|------|
+| 1 | HTML structure + nav + hero + GitHub stars API integration |
+| 2 | Problem/Solution section + 9 features grid with collapsible |
+| 3 | Demo embed (YouTube/Vimeo iframe + fallback) + waitlist form with all states |
+| 4 | GitHub activity + footer + mobile responsive pass |
+| 5 | SEO meta + deploy to Pages/Vercel + performance audit |
+
+### 3.5 File Structure
+
+```
+trelo-landing/
+  index.html
+  css/styles.css
+  js/main.js, github-stars.js, waitlist.js
+  assets/logo.svg, favicon.ico, og-image.png, demo-video.mp4
+  robots.txt, sitemap.xml
 ```
 
-### 6.2 Dashboard
+---
 
-A minimal web dashboard showing:
-- Real-time circuit breaker states (per-tool)
-- Cost savings counter (actual vs. without Trelo)
-- Blocked threats (SSRF attempts, PII leaks, prompt injections)
-- Execution history with pass/fail per interaction
-- Audit log export (JSONL, SOC2-ready)
+## 4. Phase 2 — Core Proxy Build (14 Days)
+
+### 4.1 Week 1: Runtime Core
+
+| Day | Component | LOC |
+|-----|-----------|-----|
+| 1-2 | Monkeypatch interceptor — hook `openai.ChatCompletion.create`, route all tool calls through Trelo | ~80 |
+| 3-4 | Circuit breaker — per-tool state machine, 3 failures/60s → escalate model | ~120 |
+| 4-5 | Semantic dedup — MD5 hash + Jaccard, cache with TTL | ~40 |
+| 5-6 | Cost tracker — per-agent budget, model-level counters, 80/95/100% thresholds | ~60 |
+| 6-7 | Audit log — JSONL per session, ISO timestamps | ~30 |
+
+### 4.2 Week 2: Safety + Demo Dashboard
+
+| Day | Component | LOC |
+|-----|-----------|-----|
+| 8-9 | SSRF guard — block private IPs, loopback, link-local | ~40 |
+| 9-10 | PII guard — regex for emails, API keys, AWS keys, credit cards, SSNs | ~50 |
+| 10-11 | Demo dashboard — Streamlit/FastAPI, before/after cost comparison, circuit viz | ~150 |
+| 12-13 | Demo scripts — broken tool, duplicate intent, SSRF attack, cost burn + record/replay | ~120 |
+| 14 | PyPI publish + README + demo video script | ~50 |
+
+**Tech stack:** Python, FastAPI, SQLite, sentence-transformers (all-MiniLM-L6-v2), OpenRouter API.
 
 ---
 
-## 7. Business Model
+## 5. Demo Scenarios
 
-| Tier | Price | What's Included |
-|------|-------|----------------|
+| Scenario | Without Trelo | With Trelo | Dashboard shows |
+|----------|--------------|------------|-----------------|
+| Broken tool (500 error) | 47 retries, \$0.94, FAILED | 3 cheap fails + 1 smart recovery, \$0.12, COMPLETED | "Saved \$0.82" — circuit state viz — recovery trajectory diff |
+| Duplicate intent ("refund order 123" + "issue refund for customer 123") | Both execute, double refund | Second blocked (Jaccard > 0.9) | "Blocked duplicate: refund order 123" |
+| SSRF (agent calls 169.254.169.254) | AWS keys leaked | URL blocked | "SSRF blocked: http://169.254.169.254/" |
+| Cost burn during live demo | Contributes to runaway costs | Budget thresholds enforced at 80/95/100% | Live cost vs baseline, tools called vs blocked |
+
+---
+
+## 6. Business Model
+
+| Tier | Price | Includes |
+|------|-------|----------|
 | Open Source | Free | Core proxy, circuit breaker, basic loop detection, audit logging |
-| Pro | $29/month | Semantic dedup, trajectory recovery, model-aware routing, dashboard |
-| Team | $299/month | Agent firewall, cost policies, A/B testing, team dashboard |
-| Enterprise | Custom | Compliance reports (SOC2/ISO), SSO, dedicated tenant, SLA, AWS autoscaling backend |
-
-**Revenue Levers:**
-- Per-request for hosted proxy ($0.0001/request after free tier)
-- Seat-based for Team/Enterprise
-- Usage-based for model routing optimization (% of token savings)
+| Pro | \$29/mo | Semantic dedup, trajectory recovery, model-aware routing, dashboard |
+| Team | \$299/mo | Agent firewall, cost policies, A/B testing, team dashboard |
+| Enterprise | Custom | Compliance reports (SOC2/ISO), SSO, dedicated tenant, SLA, autoscaling |
 
 ---
 
-## 8. Go-To-Market Strategy
+## 7. Go-To-Market
 
-### Phase 1: Community-Led Growth (Months 1-3)
-- Open source on GitHub with README + quickstart + demo video
-- Launch on Hacker News: "Show HN: Trelo — Stop your AI agents from burning $500 overnight"
-- r/AI_Agents community (315K members)
-- LangChain Discord, CrewAI Discord, AutoGen Discord
-- Content: "Why your agent burned $83 last night (and the circuit breaker pattern that fixes it)"
+| Phase | Timeline | Actions |
+|-------|----------|---------|
+| Landing Page | Week 1 | Build page → post on X, HN, r/AI_Agents, LangChain/CrewAI/AutoGen Discords |
+| OSS Launch | Month 2 | Publish proxy on PyPI. 10 design partners from waitlist. Free Team in exchange for case studies. |
+| Enterprise | Month 4+ | Target 100+ agent companies (fintech, e-commerce, SaaS). Compliance/security budgets \$2-5K/mo. |
 
-### Phase 2: Design Partners → Paying Customers (Months 3-6)
-- 10 design partners from community with agents in production
-- Free Team tier for 3 months in exchange for case studies
-- Convert after proving demonstrable token savings
-
-### Phase 3: Enterprise Pipeline (Months 6-12)
-- Target companies running 100+ agents (fintech, e-commerce, SaaS)
-- Channel: compliance and security budgets ($2K-5K/month)
+**Content play:** "Why your agent burned \$83 last night (and the circuit breaker that fixes it)" — blog post for HN/Reddit.
 
 ---
 
-## 9. Why This Wins
+## 8. Key Metrics & OKRs
 
-1. **Timing is perfect:** Gartner predicts 40%+ agent project cancellation by 2027. Teams are desperately searching for reliability solutions.
-
-2. **No one combines all 9 layers:** Every competitor solves one piece. Trelo solves all of them in one `pip install`.
-
-3. **YC is signaling directly:** Their RFS for "AI companies that replace services" requires exactly the runtime safety Trelo provides. Their funding of Chronicle Labs, Agentic Fabriq, and GodHands validates the agent infrastructure thesis.
-
-4. **The economics work:** $29/mo Pro tier is affordable for individual devs. $299/mo Team is cheap compared to the $500+ agents can burn in a single overnight loop.
-
-5. **Network effects:** The more agents protected by Trelo, the more recovery patterns in the trajectory wiki. The OSS core drives adoption; the hosted tiers monetize advanced features.
-
-6. **Defensible moat through novelty:** Model-aware circuit breaking + canary token hallucination detection are genuinely novel. No competitor combines execution safety with runtime hallucination detection. Both techniques are patentable and create a differentiated story for YC interviews.
-
-7. **Token efficiency as a wedge:** The shared tool library saves developers 500+ tokens per tool reference per session — a concrete, measurable benefit that compounds across hundreds of agents. It's the kind of efficiency metric enterprises love.
+| Month | GitHub Stars | Waitlist/Paying | Revenue | Agents Protected |
+|-------|-------------|-----------------|---------|-----------------|
+| 1 | 100 | 200 signups | \$0 | 0 |
+| 2-3 | 500 | 100 dev signups, 10 design partners | \$0 | 500 |
+| 4-6 | — | 10+ paying teams | \$5K MRR | 5,000 |
+| 7-9 | — | Enterprise pipeline | \$15K MRR | — |
+| 10-12 | — | 50+ paying teams | \$50K MRR | 50,000+ |
 
 ---
 
-## 10. Risk Assessment
+## 9. Market Positioning
 
-| Risk | Mitigation |
-|------|-----------|
-| LangChain/OpenAI build this natively | Stay middleware — they focus on orchestration, not safety. Partner with them if needed. |
-| Open-source competitors | Keep OSS core free, monetize advanced layers (firewall, cost policies, enterprise compliance). |
-| Enterprise sales cycles | Start with dev-led growth. Enterprise is phase 3. |
-| Single founder risk | Apply to YC/EF to find a co-founder. The product-first approach buys time. |
-| Model routing costs | Both cheap and smart model costs are trending down over time. |
+| Problem | How Trelo Wins |
+|---------|---------------|
+| Agent loops on broken tool | Circuit breaker: 90% cost reduction on failures |
+| Duplicate intents cost double | Semantic dedup: blocks rephrased duplicates |
+| Agent discovers internal IPs | SSRF guard: blocks before execution |
+| Agent leaks PII | PII guard: redacts in real-time |
+| Nobody knows agent costs | Dashboard: per-agent tracking + projections |
+| Agent hallucinates after 30 turns | Canary token guard: detects + summarizes |
+| Token waste on repeated tool schemas | Shared tool library: -500 tokens/tool/session |
 
----
+**Competitive wedge:** No single competitor offers all of these in one `pip install`. Competitors solve one piece (observability, memory, testing, monitoring). Trelo is the only active runtime middleware that does all 9.
 
-## 11. Key Metrics & OKRs
-
-### Month 1-2
-- 500 GitHub stars
-- 100 developer signups
-- HN front page
-
-### Month 3-4
-- 10 design partners
-- First revenue ($500 MRR)
-- 500 agents protected
-
-### Month 5-6
-- Team tier launched
-- First enterprise POC
-- $5K MRR, 5,000 agents protected
-
-### Month 7-9
-- YC Demo Day (if accepted)
-- Seed round ($2-3M)
-- $15K MRR, enterprise pipeline
-
-### Month 10-12
-- Enterprise GA
-- SOC2 certification
-- 50+ paying teams
-- $50K MRR, 50,000+ agents protected
+**Market timing:** 40%+ of agentic AI projects will be cancelled by 2027 (Gartner). 96% of enterprises report costs exceeding expectations. The market is desperate for this.
 
 ---
 
-## 12. Appendix: YC Application One-Pager
+## 10. YC One-Pager
 
-**Describe what your company does in one sentence:**
+**One sentence:** Trelo is trust middleware for AI agents — a deterministic runtime that stops infinite loops, blocks duplicate payments, prevents security attacks, and slashes token waste by 40-70%. One line of code. `pip install trelo`.
 
-Trelo is trust middleware for AI agents — a deterministic runtime that stops infinite loops, blocks duplicate payments, prevents security attacks, and slashes token waste by 40-70%. One line of code. `pip install trelo`.
+**What you're making:** A lightweight proxy between any agent framework and the world — circuit breakers with model-aware routing, semantic dedup, trajectory recovery, agent firewall, full audit trail. All in one `pip install`.
 
-**What are you going to make?**
+**Why now:** 96% of enterprises say AI costs exceed expectations. 40%+ of agent projects will be cancelled. 79% deployed agents but only 23% scaled. Every team independently builds guardrails and circuit breakers. Trelo standardizes this.
 
-A lightweight proxy that sits between any AI agent framework and the world, enforcing execution safety and security. It combines circuit breakers with model-aware routing, semantic deduplication, trajectory recovery, an agent firewall, and a full audit trail — all in one `pip install`.
+**What you've built so far:** Landing page (waitlist growing), demo video showing circuit breaker savings, GitHub community building. Python proxy in active development.
 
-**Why is this important right now?**
-
-96% of enterprises report agentic AI costs far exceeding expectations. 40%+ of agentic AI projects will be cancelled by 2027. 79% have deployed agents, but only 23% are scaling to production. Every team is independently building guardrails and circuit breakers. Trelo standardizes this into one runtime.
-
-**What have you built so far?**
-
-A working Python proxy that intercepts agent tool calls, detects stagnation via embedding similarity, and demonstrates circuit breaking with model escalation. Open-source launch this week.
-
-**Why you?**
-
-I have personally hit these failure modes building AI agents. I understand the exact moment a developer realizes their agent looped overnight and drained their API budget. I am a student founder who can ship fast and build the tool I wish already existed.
+**Why you:** Experienced the exact failure modes building AI agents at Uber AI / Google Gemini (NDA). Know the moment a dev realizes their agent looped overnight and drained the budget. Student founder, ship fast.
 
 ---
 
-*Document Version 1.1 — June 2026*
-*Author: Raj Pratap Singh Gurjar*
+## 11. Changelog
 
-### Changelog
-
-- **v1.1 (June 2026):** Added Layer 9 (Hallucination Guard via canary tokens), shared Tool Library for token efficiency, extended problem statement with hallucination + token waste pain points, updated competitor analysis, removed B2C pivot from scope. Autoscaling added as Enterprise-tier ops feature.
+- **v2.2 (June 18, 2026):** Restructured for concision. Kept detailed implementation notes for all 9 layers. Phase 1 landing page scope with full build spec (waitlist, demo, GitHub stars). Phase 2 proxy build plan. Demo scenarios, business model, GTM, OKRs, competitive positioning, YC one-pager. PDF generation via pandoc.
+- **v2.1 (June 2026):** Demo-scope PRD. Removed aspirational V2 layers.
+- **v1.1 (June 2026):** Added hallucination guard, tool library.
+- **v1.0 (May 2026):** Initial 9-layer release.
