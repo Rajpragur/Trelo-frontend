@@ -191,7 +191,10 @@ function HeroWaitlistCapture({ reduce }: { reduce: boolean | null }) {
         setStep("duplicate");
         return;
       }
-      if (!res.ok) throw new Error(data.message);
+      if (!res.ok) {
+        setStatusMsg(data.message ?? "Something went wrong. Try again.");
+        return;
+      }
       setStep("code");
     } catch {
       setStatusMsg("Something went wrong. Try again.");

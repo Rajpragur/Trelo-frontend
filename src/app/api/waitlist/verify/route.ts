@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getClientIP, checkRateLimit } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIP(request);
+
+  if (!checkRateLimit(ip, 10, 900_000)) {
+    return NextResponse.json(
+      { error: "rate_limited", message: "Too many attempts. Try again later." },
+      { status: 429 }
+    );
+  }
+
   let body: { email?: string; code?: string };
   try {
     body = await request.json();
@@ -32,17 +42,17 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createServiceClient();
 
-    // Find the entry
     const { data, error } = await (supabase.from("waitlist") as any)
       .select("id, verification_code, code_expires_at, verified")
       .eq("email", email)
       .maybeSingle();
 
     if (error) throw error;
+
     if (!data) {
       return NextResponse.json(
-        { error: "not_found", message: "No signup found for this email." },
-        { status: 404 }
+        { error: "invalid_code", message: "Invalid or expired verification code." },
+        { status: 400 }
       );
     }
 
@@ -53,23 +63,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check expiry
     if (data.code_expires_at && new Date(data.code_expires_at) < new Date()) {
       return NextResponse.json(
-        { error: "code_expired", message: "Verification code expired. Try signing up again." },
-        { status: 410 }
-      );
-    }
-
-    // Check code match
-    if (data.verification_code !== code) {
-      return NextResponse.json(
-        { error: "wrong_code", message: "Wrong code. Please try again." },
+        { error: "invalid_code", message: "Invalid or expired verification code." },
         { status: 400 }
       );
     }
 
-    // Mark verified
+    if (data.verification_code !== code) {
+      return NextResponse.json(
+        { error: "invalid_code", message: "Invalid or expired verification code." },
+        { status: 400 }
+      );
+    }
+
     const { error: updateErr } = await (supabase.from("waitlist") as any)
       .update({
         verified: true,

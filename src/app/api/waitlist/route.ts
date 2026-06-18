@@ -1,45 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendVerificationCode } from "@/lib/email";
+import { getClientIP, checkRateLimit } from "@/lib/utils";
 
-const RATE_LIMIT = 5;
-const RATE_WINDOW_MS = 3_600_000;
 const CODE_EXPIRY_MINUTES = 15;
-
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-
-function getClientIP(request: NextRequest): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-real-ip") ??
-    "127.0.0.1"
-  );
-}
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return true;
-  }
-  if (entry.count >= RATE_LIMIT) return false;
-  entry.count++;
-  return true;
-}
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function generateCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  const arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  return (100000 + (arr[0] % 900000)).toString();
 }
 
 export async function POST(request: NextRequest) {
   const ip = getClientIP(request);
 
-  if (!checkRateLimit(ip)) {
+  if (!checkRateLimit(ip, 10, 900_000)) {
     return NextResponse.json(
       { error: "rate_limited", message: "Too many submissions. Try again later." },
       { status: 429 }
@@ -74,9 +53,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (name.length < 2) {
+  if (email.length > 254) {
     return NextResponse.json(
-      { error: "invalid_name", message: "Name must be at least 2 characters." },
+      { error: "invalid_email", message: "Email address is too long." },
+      { status: 400 }
+    );
+  }
+
+  if (name.length < 2 || name.length > 100) {
+    return NextResponse.json(
+      { error: "invalid_name", message: "Name must be between 2 and 100 characters." },
+      { status: 400 }
+    );
+  }
+
+  if (useCase.length > 500) {
+    return NextResponse.json(
+      { error: "invalid_use_case", message: "Please keep your description under 500 characters." },
       { status: 400 }
     );
   }

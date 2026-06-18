@@ -18,3 +18,4 @@
 - Decorative/texture components (like FlickeringGrid, DitherShader) should be placed in the background layer of sections — behind the content with pointer-events-none — not integrated as visible foreground elements that displace or restructure the original layout. Confidence: 0.80
 - Use lucide-react icons (Check, Minus) for feature comparison tables instead of inline SVGs, for cleaner and more consistent iconography. Confidence: 0.65
 - Navbar dropdowns should be hover-triggered (not click-to-toggle), with wide rectangular card layouts containing icons, descriptions, and smooth AnimatePresence entry/exit animations. Confidence: 0.75
+- Prefer brand-specific icons (Discord, GitHub, etc.) over generic external-link icons for navbar dropdown links to known services. Confidence: 0.65
