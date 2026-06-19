@@ -12,7 +12,7 @@ import { WaitlistSection } from "@/components/WaitlistSection";
 import { GitHubStars } from "@/components/GitHubStars";
 import { WaitlistCountProvider, useWaitlistCount } from "@/lib/waitlist-count";
 import { Check, Minus, MoveRight, PhoneCall } from "lucide-react";
-const MICHELANGELO_SRC = "/michelangelo_image.jpg";
+const CRAB_SRC = "/bg_clear.jpg";
 const SCHOOL_OF_ATHENS_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg/1280px-%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg";
 
 const slide = { duration: 0.7, ease: [0.22, 1, 0.36, 1] } as const;
@@ -98,6 +98,35 @@ function Hero() {
           style={reduce ? {} : { opacity: contentOpacity, willChange: "opacity" }}
           className="relative z-10 h-full pointer-events-none"
         >
+          {/* Floating mascot — tweak top values per breakpoint */}
+          <div className="absolute inset-0 flex justify-center pointer-events-none">
+            <motion.img
+              src="/mascot.webp"
+              alt="Mascot"
+              className="w-40 h-40 md:w-56 md:h-56 object-contain opacity-90 relative top-[68%] sm:top-[68%] md:top-[61%] lg:top-[60%]"
+              animate={reduce ? {} : { y: [-12, 4, -12] }}
+              transition={{
+                duration: 4,
+                ease: "easeInOut",
+                repeat: Infinity,
+              }}
+            />
+          </div>
+          {/* Inverted agent on the right side, facing left toward mascot */}
+          <div className="absolute inset-0 flex justify-center pointer-events-none">
+            <motion.img
+              src="/mascot.webp"
+              alt="Agent"
+              className="w-40 h-40 md:w-56 md:h-56 object-contain opacity-90 relative scale-x-[-1] right-[-38%] sm:right-[-40%] md:right-[-38%] lg:right-[-36%] top-[65%] sm:top-[66%] md:top-[57%] lg:top-[58%]"
+              animate={reduce ? {} : { y: [4, -7, 4] }}
+              transition={{
+                duration: 4,
+                ease: "easeInOut",
+                repeat: Infinity,
+              }}
+            />
+          </div>
+
           <div className="absolute bottom-12 md:bottom-24 left-4 right-4 md:left-16 md:right-auto max-w-2xl">
             <motion.h1
               initial={reduce ? {} : { opacity: 0, y: 30 }}
@@ -141,10 +170,10 @@ const HeroBackground = memo(function HeroBackground({
   useEffect(() => {
     const img = new Image();
     img.onload = () => {
-      setBgImage(`url(${MICHELANGELO_SRC})`);
+      setBgImage(`url(${CRAB_SRC})`);
       setLoaded(true);
     };
-    img.src = MICHELANGELO_SRC;
+    img.src = CRAB_SRC;
     return () => {
       img.onload = null;
     };
