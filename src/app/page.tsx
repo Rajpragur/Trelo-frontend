@@ -103,8 +103,8 @@ function Hero() {
             <motion.img
               src="/mascot.webp"
               alt="Mascot"
-              className="w-40 h-40 md:w-56 md:h-56 object-contain opacity-90 relative top-[68%] sm:top-[68%] md:top-[61%] lg:top-[60%]"
-              animate={reduce ? {} : { y: [-12, 4, -12] }}
+              className="w-40 h-40 md:w-56 md:h-56 object-contain opacity-90 relative top-[67%] sm:top-[68%] md:top-[61%] lg:top-[60%]"
+              animate={reduce ? {} : { y: [-8, 4, -8] }}
               transition={{
                 duration: 4,
                 ease: "easeInOut",
@@ -410,9 +410,9 @@ const FEATURE_LAYERS = [
   },
   {
     layer: "L4",
-    title: "Cost Policies",
-    short: "Set per-agent budgets. Get alerts before things spiral out of control.",
-    detail: "Define spending thresholds per agent, per day. Automatic model downgrades at 80% budget, hard pause at the limit. Never wake up to a surprise API bill again.",
+    title: "Idempotency",
+    short: "Never process the same action twice — even after timeout, restart, or browser mismatch.",
+    detail: "Each expensive external action gets a stable operation_id. First-execution result is cached and returned on any reattempt — covering timeout-after-success, worker restart, and browser/tool state mismatch. Uses request_id = hash(run_id + tool + operation_id) with state machine: PENDING → DISPATCHED → CONFIRMED. Never retries from CONFIRMED. Prevents duplicate payments, emails, and API mutations.",
   },
   {
     layer: "L5",
@@ -425,12 +425,6 @@ const FEATURE_LAYERS = [
     title: "Retry Intelligence",
     short: "Smart backoff that cuts failure costs by 90% instead of hammering the same error.",
     detail: "Analyzes failure patterns and recovers with context, not brute force. Escalates to smarter models only when needed. One recovery attempt instead of 47 retries.",
-  },
-  {
-    layer: "L7",
-    title: "Side-effect Safety",
-    short: "Guarantees payments process once. Emails send once. No double-writes. Ever.",
-    detail: "Tracks every external action through a safe state machine. A dispatched payment cannot be re-dispatched. A confirmed email cannot be sent again. Deterministic guarantees, not best-effort.",
   },
   {
     layer: "L8",
@@ -504,7 +498,7 @@ function FeaturesSection() {
             }}
           >
             <h2 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-[5rem] font-light text-trelo-text tracking-[-0.03em] leading-[1.05]">
-              Nine layers.
+              Eight layers.
               <br />
               <span className="text-blue-600">One proxy.</span>
             </h2>
@@ -512,7 +506,7 @@ function FeaturesSection() {
 
           <div
             ref={gridRef}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-[1000px] mx-auto"
+            className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-[1200px] mx-auto"
           >
             {FEATURE_LAYERS.map((card, i) => (
               <FeatureCardItem
@@ -1012,7 +1006,9 @@ function PricingSection() {
                 </p>
                 <p className="text-xs font-light text-gray-400">{plan.desc}</p>
                 <a
-                  href="#"
+                  href={plan.name === "Free" ? "https://github.com/Trelo-proxy" : "/#waitlist"}
+                  target={plan.name === "Free" ? "_blank" : undefined}
+                  rel={plan.name === "Free" ? "noopener noreferrer" : undefined}
                   className={`inline-flex items-center justify-center gap-2 mt-3 py-2.5 px-5 rounded-[3px] text-sm font-normal transition-colors ${
                     plan.prominent
                       ? "bg-blue-600 hover:bg-blue-500 text-white"
@@ -1090,7 +1086,9 @@ function PricingSection() {
                   </p>
                 </div>
                 <a
-                  href="#"
+                  href={plan.name === "Free" ? "https://github.com/Trelo-proxy" : "/#waitlist"}
+                  target={plan.name === "Free" ? "_blank" : undefined}
+                  rel={plan.name === "Free" ? "noopener noreferrer" : undefined}
                   className={`inline-flex items-center gap-2 py-2 px-4 rounded-[3px] text-xs font-normal ${
                     plan.prominent
                       ? "bg-blue-600 text-white"
@@ -1139,7 +1137,7 @@ function PricingSection() {
               Dedicated support, SSO, compliance reports, unlimited everything.
             </p>
             <a
-              href="#"
+              href="/contact"
               className="inline-flex items-center justify-center gap-2 mt-2 py-2.5 px-5 rounded-[3px] text-sm font-normal bg-white border border-gray-200 hover:border-gray-300 text-trelo-text transition-colors"
             >
               Contact us <PhoneCall className="w-3.5 h-3.5" />
@@ -1158,7 +1156,7 @@ function PricingSection() {
           <p className="text-sm font-light text-gray-500">
             Open source? Self-host Trelo for free. MIT licensed.{" "}
             <a
-              href="https://github.com"
+              href="https://github.com/Trelo-proxy"
               target="_blank"
               className="text-blue-600 font-normal hover:underline underline-offset-2"
             >
@@ -1312,7 +1310,7 @@ function FooterSection() {
           </p>
           <div className="flex items-center gap-4">
             <a
-              href="https://github.com"
+              href="https://github.com/Trelo-proxy"
               target="_blank"
               className="text-gray-400 hover:text-trelo-text transition-colors"
             >

@@ -33,7 +33,7 @@ function DiscordIcon({ className }: { className?: string }) {
 }
 
 const productLinks: DropdownLink[] = [
-  { title: "Features", href: "/#features", desc: "Nine protection layers for your AI agents.", icon: Layers },
+  { title: "Features", href: "/#features", desc: "Eight protection layers for your AI agents.", icon: Layers },
   { title: "How it works", href: "/#how-it-works", desc: "Two steps, zero config.", icon: Zap },
   { title: "Pricing", href: "/#pricing", desc: "Start free, scale when ready.", icon: DollarSign },
 ];
@@ -180,23 +180,15 @@ export default function NavBar({ scrollSwitch = false }: NavBarProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            <a
-              href="/#waitlist"
-              className={`hidden sm:inline-flex text-[13px] font-medium transition-colors ${
-                isTransparent ? "text-white/80 hover:text-white" : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Join waitlist
-            </a>
             <Link
-              href="/login"
+              href="/#waitlist"
               className={`text-[13px] font-medium rounded-[3px] px-4 py-1.5 transition-all duration-300 ${
                 isTransparent
                   ? "text-white bg-white/15 hover:bg-white/25"
                   : "text-trelo-text bg-gray-100 hover:bg-gray-200"
               }`}
             >
-              Sign in
+              Join waitlist
             </Link>
           </div>
         </div>

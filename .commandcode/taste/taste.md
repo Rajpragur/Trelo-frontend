@@ -21,6 +21,7 @@ See [email/taste.md](email/taste.md)
 # workflow
 - When asked for an audit or list of issues, present the list first and wait for approval before making fixes — do not fix proactively. Confidence: 0.70
 - Build complete, functional implementations — do not leave placeholder/stub/empty content. Every section should be filled out and working, ready to ship. Confidence: 0.85
+- Keep codebase in sync with PRD.md — when the PRD is updated, proactively check and apply relevant changes to the implementation. Confidence: 0.70
 
 # react
 - Use optimistic UI updates for counters and lists — increment locally (+1) immediately on user action, then sync with server on page refresh. Confidence: 0.70

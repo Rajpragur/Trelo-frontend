@@ -5,15 +5,15 @@ date: "June 2026"
 geometry: margin=1in
 ---
 
-# Product Requirements Document v2.2
+# Product Requirements Document v2.3
 
 ## 0. Document Control
 
 | Detail | Value |
 |--------|-------|
-| **Version** | v2.2 |
+| **Version** | v2.3 |
 | **Author** | Raj Pratap Singh Gurjar |
-| **Date** | June 18, 2026 |
+| **Date** | June 19, 2026 |
 | **Status** | Draft |
 | **Phase 1 Scope** | Landing page with waitlist, demo embed, GitHub stars counter |
 
@@ -32,6 +32,21 @@ Trelo is a runtime safety layer that sits between AI agent frameworks and the ex
 ---
 
 ## 2. Product Architecture — The 9 Layers
+
+### Cross-Cutting Principle: Permission ≠ Budget
+
+Two concerns that drift separately:
+
+| Concern | Question | Enforced By | Drift Pattern |
+|---------|----------|-------------|---------------|
+| **Permission** | "Can this agent call this tool?" | L5 Agent Firewall — allowlist, SSRF, PII, prompt injection | Rarely changes — set per agent role, stable across runs |
+| **Budget** | "Can this agent spend this much on this attempt?" | L6 Cost Enforcement — per-call cost cap, session budget, tier thresholds | Changes per attempt — depends on remaining budget, call complexity, model chosen |
+
+Mixing them leads to brittle policy. A tool might be permitted (allowlisted, no injection risk) but exceed the per-attempt budget. Conversely, an agent might have budget remaining but lack permission for a tool. Trelo checks **permission first** (L5), then **budget** (L6), independently — and surfaces which gate was hit in the audit log.
+
+---
+
+### Architecture Diagram
 
 ```
 Agent Framework (LangChain, CrewAI, OpenAI SDK, AutoGen, etc.)
@@ -62,9 +77,9 @@ Tools, APIs, Databases, External Services
 | L1: Call Interceptor | Duplicate intents cost double | MD5 hash (tool_name + canonical_args) + Jaccard > 0.9 = BLOCK | Prevents double charges |
 | L2: Circuit Breaker | Infinite retry loops burn \$500 overnight | 3 failures/60s -> escalate cheap→smart model -> probe -> reset. All fail -> HARD OPEN -> human notified | 90% reduction on failure costs |
 | L3: Trajectory Recovery | Agent gets stuck same way every time | raw/traces/ -> LLM compiles -> wiki/trajectories/. Stagnation triggers wiki read -> hint injection | Faster recovery, less token waste |
-| L4: Idempotency | Retrying already-dispatched actions | request_id = hash(run_id + tool + args). Never retry from DISPATCHED state | Prevents duplicate payments/emails |
+| L4: Idempotency | Retrying already-dispatched actions or re-executing after timeout/restart | Stable `operation_id` per expensive external action. Cache first-execution result; return cached on reattempt (covers timeout-after-success, worker restart, browser/tool state mismatch). `request_id = hash(run_id + tool + operation_id)`. State: PENDING → DISPATCHED → CONFIRMED. Never retry from CONFIRMED. | Prevents duplicate payments/emails, silent double-execution on worker restart, duplicate API mutations |
 | L5: Agent Firewall | Agent calls internal IPs, leaks secrets | Block 169.254.x.x, 10.x.x.x, 172.16-31.x.x, 192.168.x.x. Regex for API keys/emails/credit cards. 150+ injection signatures | Security — priceless |
-| L6: Cost Enforcement | Agents burn through budgets silently | 80% -> auto-downgrade model. 95% -> pause new tasks. 100% -> hard stop (never mid-execution) | Predictable costs |
+| L6: Cost Enforcement | Agents burn through budgets silently | 80% -> auto-downgrade model. 95% -> pause new tasks. 100% -> hard stop (never mid-execution). Per-attempt cost cap independent of tool permissions. | Predictable costs, no surprise bills from a single expensive attempt |
 | L7: Audit Trail | No record when things break at 3 AM | JSONL with timestamp + agent_id per decision. SOC2-ready format. Drift detection vs historical baseline | Compliance requirement |
 | L8: Deterministic Testing | Can't reproduce agent failures | Replay exact traces from L7. A/B test configs. Inject 503s/timeouts. CI/CD integration | Confidence to deploy |
 | L9: Hallucination Guard | Agent hallucinates after 30+ tool calls | Inject canary tokens at context boundaries. Check survival rate periodically. Auto-trigger summarization when integrity drops | Prevents quiet failures |
@@ -246,6 +261,7 @@ trelo-landing/
 
 ## 11. Changelog
 
+- **v2.3 (June 19, 2026):** Enhanced L4 Idempotency with stable operation IDs and result caching (covers timeout-after-success, worker restart, state mismatch). Added explicit cross-cutting principle: Permission ≠ Budget (L5/L6 separation). Per-attempt cost cap added to L6.
 - **v2.2 (June 18, 2026):** Restructured for concision. Kept detailed implementation notes for all 9 layers. Phase 1 landing page scope with full build spec (waitlist, demo, GitHub stars). Phase 2 proxy build plan. Demo scenarios, business model, GTM, OKRs, competitive positioning, YC one-pager. PDF generation via pandoc.
 - **v2.1 (June 2026):** Demo-scope PRD. Removed aspirational V2 layers.
 - **v1.1 (June 2026):** Added hallucination guard, tool library.
